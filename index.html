@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="고3의 1년을 보내며 고른 선택으로 나에게 어울리는 전공을 찾아 주는 진로 RPG 게임">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>수능까지 D-365 RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: one phone-width column drawn as a 수능 OMR answer sheet; the school map is a pixel-art canvas inside it */
+:root {
+  --bg: #F4F1F2;
+  --paper: #FFFFFF;
+  --ink: #1C1A1F;
+  --muted: #6F6670;
+  --omr: #CF3148;
+  --omr-soft: #FBE6E9;
+  --rule: #EBC6CC;
+  --display: 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131116; --paper: #1D1A20; --ink: #F2EDF0; --muted: #A99FA8;
+    --omr: #FF6E80; --omr-soft: #3A1D25; --rule: #4B2C34; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131116; --paper: #1D1A20; --ink: #F2EDF0; --muted: #A99FA8;
+  --omr: #FF6E80; --omr-soft: #3A1D25; --rule: #4B2C34; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+  word-break: keep-all;
+}
+.wrap { max-width: 580px; margin: 0 auto; }
+
+.sheet {
+  position: relative;
+  background: var(--paper);
+  border: 2px solid var(--omr);
+  border-radius: 6px;
+  padding-left: 18px;
+  overflow: hidden;
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  left: 5px; top: 52px; bottom: 18px;
+  width: 7px;
+  background: repeating-linear-gradient(to bottom, var(--ink) 0 4px, transparent 4px 16px);
+}
+.head {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border-bottom: 2px solid var(--omr);
+  padding: 10px 16px 10px 4px;
+  color: var(--omr);
+  font-size: 13px; font-weight: 700; letter-spacing: .06em;
+}
+.head .d { font-family: var(--display); font-size: 20px; letter-spacing: .02em; font-weight: 400; }
+.body { padding: 20px 18px 24px 4px; display: grid; gap: 16px; min-width: 0; }
+
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.note { color: var(--omr); font-size: 13px; }
+
+/* Start */
+.big-d { font-family: var(--display); color: var(--omr); font-size: clamp(72px, 21vw, 112px); line-height: .9; }
+.start h1 { font-family: var(--display); font-size: 28px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.facts span { border: 1px solid var(--rule); border-radius: 999px; padding: 2px 12px; font-size: 13px; color: var(--muted); }
+.label { font-size: 13px; font-weight: 700; color: var(--omr); letter-spacing: .06em; }
+.who { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.who button {
+  font: inherit; color: var(--ink); cursor: pointer;
+  display: grid; justify-items: center; gap: 8px;
+  padding: 14px 8px 12px;
+  background: transparent;
+  border: 2px solid var(--rule); border-radius: 6px;
+}
+.who button:hover { border-color: var(--omr); }
+.who button[aria-pressed="true"] { border-color: var(--omr); background: var(--omr-soft); }
+.who canvas { width: 96px; height: 126px; image-rendering: pixelated; }
+.who .tag { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.mini-bubble { width: 14px; height: 20px; border-radius: 50%; border: 1.5px solid var(--omr); }
+.who button[aria-pressed="true"] .mini-bubble { background: var(--ink); border-color: var(--ink); }
+.field { display: grid; gap: 6px; }
+.field input {
+  font: inherit; color: var(--ink); background: transparent;
+  border: 0; border-bottom: 2px solid var(--rule);
+  padding: 6px 2px; border-radius: 0;
+}
+.field input:focus { outline: none; border-bottom-color: var(--omr); }
+.stack { display: grid; gap: 10px; }
+
+.btn {
+  font: inherit; font-weight: 700; cursor: pointer;
+  border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+  border-radius: 6px; padding: 10px 18px;
+}
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn:focus-visible, .choice:focus-visible, .link:focus-visible, .who button:focus-visible, .chip:focus-visible, canvas:focus-visible { outline: 3px solid var(--omr); outline-offset: 2px; }
+.link { font: inherit; font-size: 14px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* Scene */
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress .count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ticks { flex: 1; display: grid; gap: 3px; }
+.ticks i { height: 6px; border-radius: 1px; background: var(--rule); }
+.ticks i.on { background: var(--omr); }
+.ticks i.exam { height: 10px; margin-top: -2px; }
+.dialog { border: 2px solid var(--ink); border-radius: 6px; padding: 12px 14px; display: grid; gap: 2px; }
+.dialog .where { font-size: 12px; font-weight: 700; color: var(--omr); letter-spacing: .08em; }
+.dialog .situation { font-size: 17px; font-weight: 700; line-height: 1.5; }
+
+.stage { position: relative; }
+#map {
+  display: block; width: 100%; height: auto;
+  image-rendering: pixelated;
+  border: 2px solid var(--ink); border-radius: 4px;
+  cursor: pointer; touch-action: manipulation;
+}
+.card {
+  position: absolute; inset: 0;
+  display: grid; place-content: center; justify-items: center; gap: 4px;
+  background: rgba(28, 26, 31, .88); color: #FFFFFF;
+  border-radius: 4px; pointer-events: none;
+  animation: cardOut 1.4s ease forwards;
+}
+.card .l { font-weight: 700; letter-spacing: .12em; font-size: 14px; }
+.card .m { font-family: var(--display); font-size: clamp(40px, 12vw, 64px); line-height: 1; color: #FF8A98; }
+.card.exam .m { color: #FFFFFF; }
+@keyframes cardOut { 0%, 55% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+
+.talk {
+  min-height: 104px;
+  border: 2px solid var(--ink); border-radius: 6px;
+  padding: 12px 14px;
+  display: grid; gap: 8px; align-content: start;
+}
+.talk .name { font-size: 12px; font-weight: 700; color: var(--omr); letter-spacing: .06em; }
+.talk .line { font-size: 16px; font-weight: 700; }
+.talk .hint { color: var(--muted); font-size: 14px; }
+.talk.done { background: var(--omr-soft); border-color: var(--omr); }
+kbd { font-family: var(--mono); font-size: 12px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--paper); color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--ink); cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 999px; padding: 4px 12px; background: transparent;
+}
+.chip:hover, .chip.near { border-color: var(--omr); background: var(--omr-soft); }
+
+/* Exam OMR card */
+.omr-card { border: 2px solid var(--omr); border-radius: 6px; padding: 12px; display: grid; gap: 8px; }
+.omr-head { display: flex; justify-content: space-between; gap: 10px; color: var(--omr); font-weight: 700; font-size: 13px; letter-spacing: .06em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+.choices { display: grid; gap: 6px; }
+.choice {
+  display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+  text-align: left; font: inherit; font-size: 15px; color: var(--ink);
+  background: transparent; border: 1px solid var(--rule); border-radius: 6px;
+  padding: 9px 12px; cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+.choice:hover { border-color: var(--omr); background: var(--omr-soft); }
+.bubble {
+  width: 20px; height: 28px; border-radius: 50%;
+  border: 1.5px solid var(--omr); color: var(--omr);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+}
+.choice.picked { border-color: var(--omr); background: var(--omr-soft); }
+.choice.picked .bubble { background: var(--ink); border-color: var(--ink); color: transparent; animation: fill .22s ease-out; }
+@keyframes fill { from { transform: scale(.6); } to { transform: scale(1); } }
+
+/* Result */
+.meta { width: 100%; border-collapse: collapse; font-size: 13px; }
+.meta th, .meta td, .scores th, .scores td { border: 1px solid var(--rule); padding: 6px 8px; text-align: center; }
+.meta th, .scores th { color: var(--omr); font-weight: 700; background: var(--omr-soft); }
+.meta td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.meta td.name { font-family: var(--body); font-weight: 700; }
+.meta td.photo { width: 76px; padding: 4px; }
+.meta td.photo canvas { width: 64px; height: 84px; image-rendering: pixelated; display: block; margin: 0 auto; }
+.table-wrap { overflow-x: auto; }
+.scores { width: 100%; border-collapse: collapse; font-size: 14px; }
+.scores td { font-variant-numeric: tabular-nums; }
+.scores td:first-child { font-weight: 700; white-space: nowrap; }
+.scores .barcell { width: 42%; text-align: left; }
+.bar { height: 8px; background: var(--omr-soft); border-radius: 1px; }
+.bar i { display: block; height: 100%; background: var(--omr); border-radius: 1px; }
+.grade { font-family: var(--display); font-size: 18px; color: var(--muted); }
+.grade.top { color: var(--omr); }
+.section-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--omr); }
+.major { display: grid; gap: 6px; padding: 18px; border: 2px solid var(--ink); border-radius: 6px; }
+.major h2 { font-family: var(--display); font-size: clamp(28px, 8.5vw, 38px); line-height: 1.15; }
+.also { font-size: 14px; color: var(--muted); }
+.also b { color: var(--ink); }
+.ai { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ai > div { min-width: 0; border-top: 2px solid var(--rule); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
+.ai > div.human { border-top-color: var(--omr); }
+.ai h3 { font-size: 14px; font-weight: 700; }
+.ai ul { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 4px; }
+@media (max-width: 420px) { .ai { grid-template-columns: 1fr; } }
+.remark { border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; font-size: 15px; line-height: 1.75; }
+.toast { font-size: 13px; color: var(--omr); min-height: 1.4em; }
+
+/* Result explanation */
+.explain { font-size: 15px; line-height: 1.7; }
+.hint-s { font-size: 12px; color: var(--muted); }
+.why-list { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 14px; }
+.why-list .when, .pick-list .scene-h { display: block; font-size: 12px; font-weight: 700; color: var(--omr); letter-spacing: .02em; }
+.chip-s { display: inline-block; margin: 4px 4px 0 0; padding: 0 8px; border: 1px solid var(--rule); border-radius: 999px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip-s.key { border-color: var(--omr); background: var(--omr-soft); color: var(--omr); font-weight: 700; }
+details.more { border: 1px solid var(--rule); border-radius: 6px; padding: 10px 14px; }
+details.more summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+details.more summary:focus-visible { outline: 3px solid var(--omr); outline-offset: 2px; }
+details.more[open] summary { margin-bottom: 10px; }
+details.more .hint-s { margin-bottom: 10px; }
+.pick-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; font-size: 14px; }
+.q-s { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+.opts { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.opt { color: var(--muted); font-size: 13px; }
+.opt.mine { color: var(--omr); font-weight: 700; }
+.pts { white-space: nowrap; }
+.scores tr.mine-row td { background: var(--omr-soft); color: var(--omr); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .choice, .choice.picked .bubble { transition: none; animation: none; }
+  .card { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap"><main id="app" class="sheet"></main></div>
+
+<script>
+/* ---------- Data ---------- */
+const STATS = [
+  { k: 'logic',   name: '논리력' },
+  { k: 'inquiry', name: '탐구력' },
+  { k: 'lang',    name: '언어력' },
+  { k: 'empathy', name: '공감력' },
+  { k: 'create',  name: '창의력' },
+  { k: 'lead',    name: '리더십' },
+  { k: 'act',     name: '실행력' },
+  { k: 'org',     name: '정리력' },
+  { k: 'body',    name: '체력' },
+  { k: 'global',  name: '국제감각' },
+  { k: 'art',     name: '예술감각' },
+  { k: 'detail',  name: '꼼꼼함' },
+];
+
+/* who: 'npc' = a person you talk to, otherwise an object you look at. exam scenes are answered on an OMR card. */
+const SCENES = [
+  { m: '3월', d: 'D-260', loc: 'classroom', q: '새 학기 첫날, 아직 어색한 교실. 쉬는 시간에 뭘 할까?', choices: [
+    { n: '고민 있는 친구', who: 'npc', g: 'f', icon: 'chat', t: '옆자리 친구의 고민을 들어 준다', s: { empathy: 2, lang: 1 } },
+    { n: '내 휴대폰', icon: 'phone', t: '반 단톡방을 만들고 공지를 올린다', s: { lead: 2, org: 1 } },
+    { n: '교과서', icon: 'pencil', t: '교과서 귀퉁이에 낙서를 그린다', s: { create: 2, art: 1 } },
+    { n: '노트북', icon: 'laptop', t: '어제 본 해외 다큐 내용을 더 찾아본다', s: { global: 2, inquiry: 1 } },
+    { n: '내 사물함', icon: 'book', t: '어수선한 사물함부터 칸칸이 정리한다', s: { org: 2, detail: 1 } },
+    { n: '기타 치는 친구', who: 'npc', g: 'm', look: 's3', icon: 'music', t: '기타 치는 친구 옆에서 같이 노래를 흥얼거린다', s: { art: 2, empathy: 1 } },
+  ]},
+  { m: '3월', d: 'D-250', loc: 'classroom', q: '반장 선거 날이다. 누구에게, 어디로 가 볼까?', choices: [
+    { n: '후보 등록함', icon: 'star', t: '직접 반장 후보로 나간다', s: { lead: 3 } },
+    { n: '포스터 친구', who: 'npc', g: 'm', icon: 'poster', t: '친구의 선거 포스터를 디자인해 준다', s: { art: 2, create: 1 } },
+    { n: '공약 게시판', icon: 'clipboard', t: '후보들 공약을 꼼꼼히 비교해 보고 투표한다', s: { logic: 2, inquiry: 1 } },
+    { n: '연설문 친구', who: 'npc', g: 'f', look: 'foreign', icon: 'paper', t: '반장 선거에 나간 다문화 친구의 연설문을 함께 다듬어 준다', s: { lang: 2, global: 1 } },
+    { n: '투표함', icon: 'clipboard', t: '선거관리위원을 맡아 개표 결과를 정확하게 확인한다', s: { detail: 2, org: 1 } },
+    { n: '유세단', who: 'npc', g: 'f', look: 's2', icon: 'music', t: '후보 친구와 교실을 돌며 유세 율동을 춘다', s: { body: 2, art: 1 } },
+  ]},
+  { m: '3월', d: 'D-240', loc: 'field', q: '점심시간 운동장. 어디로 가 볼까?', choices: [
+    { n: '축구 친구들', who: 'npc', g: 'm', icon: 'ball', t: '축구 시합에 끼어서 같이 뛴다', s: { body: 3 } },
+    { n: '스탠드', icon: 'camera', t: '스탠드에서 친구들 경기 사진을 멋지게 찍어 준다', s: { art: 2, empathy: 1 } },
+    { n: '교환학생', who: 'npc', g: 'f', look: 'foreign', icon: 'globe', t: '교환학생에게 학교 곳곳을 영어로 안내한다', s: { global: 3 } },
+    { n: '화단', icon: 'flower', t: '화단에 핀 처음 보는 꽃을 관찰한다', s: { inquiry: 3 } },
+    { n: '쓰레기 봉투', icon: 'drop', t: '운동장을 돌며 버려진 쓰레기를 주워 분리수거한다', s: { act: 2, body: 1 } },
+    { n: '벤치 친구들', who: 'npc', g: 'm', look: 's2', icon: 'chat', t: '벤치에 모인 친구들과 새로운 놀이를 만들어 논다', s: { create: 2, lead: 1 } },
+  ]},
+  { m: '4월', d: 'D-220', loc: 'classroom', q: '조별 수행평가, 조원 한 명이 잠수를 탔다!', choices: [
+    { n: '버스기사', icon: 'paper', t: '밤을 새워서라도 그 몫까지 혼자 해 버린다', s: { act: 2, body: 1 } },
+    { n: '남은 조원들', who: 'npc', g: 'm', look: 's2', icon: 'chat', t: '조원들을 모아 차분하게 역할을 다시 나눈다', s: { lead: 2, empathy: 1 } },
+    { n: '발표 자료', icon: 'poster', t: '발표 대본과 PPT를 재미있게 꾸며서 우리 조만의 발표를 만든다', s: { create: 2, lang: 1 } },
+    { n: '일정표', icon: 'clipboard', t: '자료 폴더와 마감 일정표를 만들어 공유한다', s: { org: 2, lead: 1 } },
+    { n: '채점 기준표', icon: 'clipboard', t: '채점 기준표를 보고 빠진 항목이 없는지 꼼꼼히 점검한다', s: { detail: 2, logic: 1 } },
+    { n: '잠수 탄 친구', who: 'npc', g: 'm', look: 's3', icon: 'drop', t: '잠수 탄 친구에게 무슨 일이 있는지 따로 연락해 본다', s: { empathy: 2, lang: 1 } },
+  ]},
+  { m: '4월', d: 'D-205', loc: 'library', q: '중간고사 2주 전, 도서관. 어떻게 공부할까?', choices: [
+    { n: '형광펜 세트', icon: 'pencil', t: '형광펜 색깔별 규칙을 정해서 노트를 정리한다', s: { org: 2, detail: 1 } },
+    { n: '기출문제집', icon: 'book', t: '기출 문제를 유형별로 나눠서 분석한다', s: { logic: 2, inquiry: 1 } },
+    { n: '해외 강의', icon: 'laptop', t: '외국 대학의 무료 공개 강의를 찾아 듣는다', s: { global: 2, inquiry: 1 } },
+    { n: '커다란 전지', icon: 'bulb', t: '단원 전체를 마인드맵 그림으로 그린다', s: { create: 2, org: 1 } },
+    { n: '개사 노트', icon: 'music', t: '외울 내용을 노래 가사로 바꿔 부르며 외운다', s: { art: 1, create: 1, lang: 1 } },
+    { n: '스터디룸', who: 'npc', g: 'f', look: 's1', icon: 'chat', t: '스터디룸을 예약하고 친구들과 문제를 나눠 푼다', s: { logic: 2, lead: 1 } },
+  ]},
+  { m: '4월', d: 'D-195', loc: 'cafeteria', q: '급식에 내가 제일 싫어하는 반찬이 나왔다.', choices: [
+    { n: '오늘의 반찬', icon: 'magnifier', t: '이 반찬이 왜 싫은지 맛과 영양 성분을 찾아본다', s: { inquiry: 3 } },
+    { n: '조리사님', who: 'npc', g: 'f', look: 'cook', icon: 'chat', t: '“조금만 주세요” 하고 웃으며 부탁드린다', s: { lang: 2, empathy: 1 } },
+    { n: '영양 선생님', who: 'npc', g: 'f', look: 'teacher', icon: 'clipboard', t: '급식 선호도 설문을 만들어 영양 선생님께 건의한다', s: { lead: 2, org: 1 } },
+    { n: '내 식판', icon: 'food', t: '건강을 생각해서 눈 딱 감고 다 먹는다', s: { body: 2, act: 1 } },
+    { n: '옆자리 친구', who: 'npc', g: 'f', look: 's2', icon: 'heart', t: '반찬 교환을 제안해서 서로 좋아하는 걸 먹는다', s: { lead: 1, lang: 1, act: 1 } },
+    { n: '다문화 친구', who: 'npc', g: 'f', look: 'foreign', icon: 'chat', t: '다문화 친구에게 그 나라에서는 이 재료를 어떻게 요리해 먹는지 물어본다', s: { global: 2, empathy: 1 } },
+  ]},
+  { m: '5월', d: 'D-180', loc: 'field', q: '체육대회 날! 어디서 활약할까?', choices: [
+    { n: '반티 도안', icon: 'poster', t: '반티 디자인을 직접 그린다', s: { art: 2, create: 1 } },
+    { n: '계주 출발선', icon: 'shoe', t: '반 대표 계주 주자로 뛴다', s: { body: 3 } },
+    { n: '응원단', who: 'npc', g: 'm', look: 's3', icon: 'music', t: '응원단장을 맡아 반 전체 응원을 이끈다', s: { lead: 2, body: 1 } },
+    { n: '교환학생', who: 'npc', g: 'f', look: 'foreign', icon: 'globe', t: '교환학생 친구에게 경기 규칙을 설명해 주며 같이 응원한다', s: { global: 3 } },
+    { n: '점수판', icon: 'chart', t: '점수 기록을 맡아 경기마다 점수를 정확히 집계한다', s: { detail: 2, org: 1 } },
+    { n: '캠코더', icon: 'camera', t: '반 친구들의 활약을 영상으로 찍어 편집한다', s: { art: 2, create: 1 } },
+  ]},
+  { m: '5월', d: 'D-170', loc: 'hallway', q: '견학 온 외국인 학생이 복도에서 길을 헤매고 있다.', choices: [
+    { n: '외국인 학생', who: 'npc', g: 'm', look: 'foreign', icon: 'chat', t: '영어로 자신 있게 길을 알려 준다', s: { global: 3 } },
+    { n: '번역 앱', icon: 'phone', t: '번역 앱을 켜서 차근차근 설명한다', s: { global: 2, inquiry: 1 } },
+    { n: '과학실 가는 길', icon: 'flag', t: '말이 안 통해도 손짓 발짓으로 직접 데려다 준다', s: { act: 2, global: 1 } },
+    { n: '메모지', icon: 'paper', t: '종이에 학교 지도를 그려 준다', s: { create: 2, org: 1 } },
+    { n: '층별 안내도', icon: 'clipboard', t: '복도의 층별 안내도 앞으로 데려가 가야 할 교실을 하나하나 짚어 준다', s: { detail: 2, inquiry: 1 } },
+    { n: '복도 친구들', who: 'npc', g: 'f', look: 's3', icon: 'chat', t: '친구들을 불러 모아 학교 곳곳을 함께 걸으며 안내한다', s: { lead: 2, body: 1 } },
+  ]},
+  { m: '6월', d: 'D-163', exam: '6월 모의평가', q: '6월 모의평가 국어 시간. 10분 남았는데 지문 하나가 통째로 남았다!', choices: [
+    { t: '문제부터 읽고 근거만 빠르게 찾는다', s: { logic: 2, inquiry: 1 } },
+    { t: '지문을 처음부터 차분히 끝까지 읽는다', s: { lang: 3 } },
+    { t: '일단 찍고, 앞 문제 마킹 실수부터 확인한다', s: { detail: 2, act: 1 } },
+    { t: '눈 감고 심호흡 세 번, 몸의 긴장부터 푼다', s: { body: 2, empathy: 1 } },
+    { t: '지문 내용을 머릿속에 그림으로 그리며 읽는다', s: { create: 2, logic: 1 } },
+  ]},
+  { m: '6월', d: 'D-160', loc: 'room', q: '모의평가를 망쳤다. 그날 밤, 내 방에서 나는?', choices: [
+    { n: '오답 노트', icon: 'chart', t: '틀린 문제를 원인별로 표에 정리해 분석한다', s: { logic: 2, org: 1 } },
+    { n: '일기장', icon: 'book', t: '일기장에 속마음을 길게 털어놓는다', s: { lang: 2, empathy: 1 } },
+    { n: '운동화', icon: 'shoe', t: '속상한 마음을 털어 내려고 나가서 땀 흘리며 뛴다', s: { body: 2, empathy: 1 } },
+    { n: '노트북', icon: 'laptop', t: '슬럼프 극복법을 찾아보며 원인을 생각한다', s: { inquiry: 2, empathy: 1 } },
+    { n: '이어폰', icon: 'music', t: '좋아하는 노래를 틀고 목청껏 따라 부른다', s: { art: 2, body: 1 } },
+    { n: '시험지', icon: 'paper', t: '시험지를 다시 펴서 실수한 곳을 한 문제씩 확인한다', s: { detail: 2, logic: 1 } },
+  ]},
+  { m: '6월', d: 'D-150', loc: 'office', deco: [[5, 1, 'teacher', 'm']],
+    q: '진로 상담 시간. 담임쌤이 “어떤 일을 하고 싶니?” 하고 묻는다. 교무실을 둘러보니 눈에 띄는 건?', choices: [
+    { n: '봉사활동 사진', icon: 'heart', t: '“사람들을 직접 도와주는 일이요.”', s: { empathy: 3 } },
+    { n: '공구 상자', icon: 'wrench', t: '“눈에 보이는 걸 직접 만드는 일이요.”', s: { act: 3 } },
+    { n: '세계 지도', icon: 'globe', t: '“여러 나라를 돌아다니는 일이요.”', s: { global: 3 } },
+    { n: '두꺼운 법전', icon: 'book', t: '“세상의 규칙과 원리를 따지는 일이요.”', s: { logic: 2, lang: 1 } },
+    { n: '공연 포스터', icon: 'poster', t: '“무대 위에서 사람들에게 감동을 주는 일이요.”', s: { art: 3 } },
+    { n: '현미경', icon: 'flask', t: '“작은 실수 하나 없이 정확해야 하는 일이요.”', s: { detail: 2, inquiry: 1 } },
+  ]},
+  { m: '7월', d: 'D-120', loc: 'lab', q: '여름방학, 생기부에 넣을 활동을 하나 골라야 한다.', choices: [
+    { n: '실험 도구', icon: 'flask', t: '과학실에서 실험하고 탐구 보고서를 쓴다', s: { inquiry: 3 } },
+    { n: '봉사 공고', icon: 'clipboard', t: '동네 도서관에서 자료 정리 봉사를 한다', s: { org: 2, empathy: 1 } },
+    { n: '코딩 노트북', icon: 'laptop', t: '코딩을 독학해서 간단한 앱을 만든다', s: { logic: 2, act: 1 } },
+    { n: '국제 교류', icon: 'globe', t: '해외 학교와 온라인 교류 프로젝트에 참여한다', s: { global: 3 } },
+    { n: '도슨트 모집', icon: 'poster', t: '미술관에서 작품을 설명하는 도슨트 봉사를 한다', s: { art: 2, lang: 1 } },
+    { n: '학생회장', who: 'npc', g: 'm', look: 's2', icon: 'star', t: '학생회 여름 캠프 프로그램을 새로 기획한다', s: { create: 2, lead: 1 } },
+  ]},
+  { m: '7월', d: 'D-110', loc: 'gym', q: '방학 전 학교 축제! 체육관에서 무엇을 맡을까?', choices: [
+    { n: '무대', icon: 'music', t: '무대에 올라 춤이나 연극을 한다', s: { art: 2, body: 1 } },
+    { n: '사회자 마이크', icon: 'mic', t: '마이크를 잡고 사회를 본다', s: { lead: 2, lang: 1 } },
+    { n: '음향 장비', icon: 'bulb', t: '조명과 음향 장비를 세팅한다', s: { act: 2, logic: 1 } },
+    { n: '큐시트', icon: 'clipboard', t: '공연 순서와 동선을 큐시트로 정리한다', s: { org: 2, lead: 1 } },
+    { n: '무대 소품', icon: 'star', t: '무대 소품과 배경을 직접 만든다', s: { create: 2, act: 1 } },
+    { n: '세계 문화 부스', icon: 'globe', t: '다문화 친구들과 세계 전통 의상·음식 부스를 꾸민다', s: { global: 2, art: 1 } },
+  ]},
+  { m: '8월', d: 'D-90', loc: 'classroom', q: '35도 폭염, 보충수업 중에 교실 선풍기가 멈췄다.', choices: [
+    { n: '고장 난 선풍기', icon: 'fan', t: '드라이버를 빌려 와서 직접 분해해 본다', s: { act: 3 } },
+    { n: '건의문 종이', icon: 'letter', t: '행정실에 보낼 건의문을 정중하게 쓴다', s: { lang: 2, lead: 1 } },
+    { n: '모델명', icon: 'magnifier', t: '선풍기 모델명으로 고장 원인을 검색한다', s: { inquiry: 2, logic: 1 } },
+    { n: '더위 먹은 친구들', who: 'npc', g: 'm', look: 's2', icon: 'drop', t: '반 친구들 자리를 그늘 쪽으로 다시 배치한다', s: { lead: 2, empathy: 1 } },
+    { n: '종이 부채', icon: 'poster', t: '친구들에게 나눠 줄 부채를 기발한 모양으로 접어 준다', s: { create: 2, act: 1 } },
+    { n: '창문과 커튼', icon: 'bulb', t: '맞바람이 치게 창문을 열고 커튼을 쳐서 교실 온도를 낮춘다', s: { act: 2, logic: 1 } },
+  ]},
+  { m: '8월', d: 'D-80', loc: 'gate', q: '하굣길 교문 앞, 길 잃은 초등학생이 울고 있다.', choices: [
+    { n: '지구대 가는 길', icon: 'flag', t: '근처 지구대까지 뛰어가서 경찰관을 데려온다', s: { body: 2, act: 1 } },
+    { n: '울고 있는 아이', who: 'npc', g: 'f', look: 'kid', icon: 'drop', t: '눈높이를 맞추고 달래 주며 이야기를 듣는다', s: { empathy: 3 } },
+    { n: '문구점 사장님', who: 'npc', g: 'm', look: 'teacher', icon: 'chat', t: '주변 가게를 뛰어다니며 부모님을 같이 찾는다', s: { act: 1, lead: 1, body: 1 } },
+    { n: '메모장', icon: 'clipboard', t: '아이 옷차림과 이름을 메모해서 신고한다', s: { org: 2, detail: 1 } },
+    { n: '동요 부르기', icon: 'music', t: '아이가 좋아하는 노래를 같이 불러 주며 진정시킨다', s: { art: 2, empathy: 1 } },
+    { n: '지나가는 사람들', who: 'npc', g: 'm', look: 'shop', icon: 'chat', t: '지나가는 사람들에게 크게 알려 함께 찾자고 한다', s: { lead: 2, lang: 1 } },
+  ]},
+  { m: '9월', d: 'D-75', exam: '9월 모의평가', q: '9월 모의평가 수학. 처음 보는 유형의 킬러 문제가 나왔다!', choices: [
+    { t: '아는 공식을 이리저리 대입해 본다', s: { logic: 2, act: 1 } },
+    { t: '그래프를 그려서 상황을 눈으로 본다', s: { create: 2, logic: 1 } },
+    { t: '주어진 조건을 표로 하나씩 정리한다', s: { org: 2, logic: 1 } },
+    { t: '과감히 넘기고 아는 문제부터 확실히 푼다', s: { act: 3 } },
+    { t: '앞 문제들의 계산 과정을 한 줄씩 다시 검산한다', s: { detail: 3 } },
+  ]},
+  { m: '9월', d: 'D-70', loc: 'library', q: '수시 원서 접수 시즌. 자기소개서를 써야 한다.', choices: [
+    { n: '활동 기록', icon: 'clipboard', t: '3년간 활동부터 표로 쭉 정리한다', s: { org: 2, logic: 1 } },
+    { n: '빈 원고지', icon: 'pencil', t: '첫 문장 하나로 세 시간째 고민한다', s: { lang: 3 } },
+    { n: '대학생 선배', who: 'npc', g: 'f', look: 'senior', icon: 'chat', t: '선배를 찾아가 조언을 듣는다', s: { lead: 1, empathy: 1, inquiry: 1 } },
+    { n: 'AI 챗봇', icon: 'laptop', t: 'AI로 초안을 뽑고, 사실과 다른 부분을 고친다', s: { inquiry: 1, logic: 1, act: 1 } },
+    { n: '맞춤법 검사', icon: 'magnifier', t: '맞춤법과 글자 수를 한 글자씩 꼼꼼히 확인한다', s: { detail: 2, lang: 1 } },
+    { n: '포트폴리오', icon: 'poster', t: '활동 사진과 작품을 모아 포트폴리오를 예쁘게 꾸민다', s: { art: 2, org: 1 } },
+  ]},
+  { m: '9월', d: 'D-60', loc: 'classroom', q: '사회 시간 토론 주제: “AI가 우리의 일자리를 빼앗을까?”', choices: [
+    { n: '통계 자료', icon: 'chart', t: '통계 자료를 근거로 차근차근 반박한다', s: { logic: 2, inquiry: 1 } },
+    { n: '인터뷰 기사', icon: 'paper', t: '실제 사람들의 사례로 마음을 움직인다', s: { lang: 2, empathy: 1 } },
+    { n: '해외 뉴스', icon: 'globe', t: '해외에서는 어떻게 대응하는지 찾아 소개한다', s: { global: 2, inquiry: 1 } },
+    { n: '사회자석', icon: 'mic', t: '사회자를 맡아 양쪽 의견을 정리한다', s: { lead: 2, lang: 1 } },
+    { n: '자료 출처', icon: 'magnifier', t: '상대 팀 자료의 출처가 믿을 만한지 하나하나 확인한다', s: { inquiry: 2, detail: 1 } },
+    { n: '역할극 팀', who: 'npc', g: 'f', look: 's1', icon: 'star', t: 'AI 시대의 미래 직업을 역할극으로 보여 준다', s: { art: 2, create: 1 } },
+  ]},
+  { m: '10월', d: 'D-30', loc: 'hallway', q: '친한 친구가 “수능 망하면 어떡하지” 하며 불안해한다.', choices: [
+    { n: '불안한 친구', who: 'npc', g: 'f', look: 's3', icon: 'drop', t: '아무 말 없이 끝까지 들어 준다', s: { empathy: 3 } },
+    { n: '상담실', who: 'npc', g: 'f', look: 'teacher', icon: 'heart', t: '함께 상담 선생님을 찾아가 보자고 손을 이끈다', s: { lead: 2, lang: 1 } },
+    { n: '합격 부적', icon: 'star', t: '친구만을 위한 합격 부적을 직접 만들어 선물한다', s: { create: 2, act: 1 } },
+    { n: '운동장 산책', icon: 'shoe', t: '바람 쐬자며 운동장을 같이 한 바퀴 걷는다', s: { body: 2, empathy: 1 } },
+    { n: '플레이리스트', icon: 'music', t: '친구를 위한 응원 노래 플레이리스트를 만들어 준다', s: { art: 2, empathy: 1 } },
+    { n: '오답 노트', icon: 'clipboard', t: '친구가 자주 틀리는 문제를 함께 꼼꼼히 짚어 준다', s: { detail: 2, logic: 1 } },
+  ]},
+  { m: '10월', d: 'D-20', loc: 'cafeteria', q: '학생회가 매점에서 팔 ‘수능 응원 간식’ 아이디어를 모집한다!', choices: [
+    { n: '매점 이모', who: 'npc', g: 'f', look: 'cook', icon: 'chat', t: '잘 팔리는 간식을 여쭤보고 아이디어를 얻는다', s: { inquiry: 2, empathy: 1 } },
+    { n: '홍보 포스터', icon: 'poster', t: '‘찍어도 정답 초코바’ 같은 합격 기원 이름과 포스터를 만든다', s: { create: 2, art: 1 } },
+    { n: '시식 테이블', icon: 'food', t: '직접 만든 간식을 가져와 친구들 앞에서 시식회를 연다', s: { act: 2, create: 1 } },
+    { n: '설문지', icon: 'clipboard', t: '반 친구들에게 수능 날 먹고 싶은 간식을 설문해 순위를 낸다', s: { org: 2, inquiry: 1 } },
+    { n: '영양 성분표', icon: 'chart', t: '영양 성분을 비교해 집중력에 좋은 간식 조합을 고른다', s: { inquiry: 2, detail: 1 } },
+    { n: '공모전 팀', who: 'npc', g: 'm', look: 's3', icon: 'star', t: '친구들을 모아 팀을 꾸리고 역할을 나눠 공모전에 나간다', s: { org: 2, lead: 1 } },
+  ]},
+  { m: '11월', d: 'D-1', loc: 'room', q: '수능 전날 밤. 마지막으로 무엇을 할까?', choices: [
+    { n: '수험 가방', icon: 'clipboard', t: '수험표, 신분증, 컴퓨터용 사인펜을 체크한다', s: { detail: 2, org: 1 } },
+    { n: '공식 노트', icon: 'book', t: '헷갈리던 공식을 딱 한 번만 더 본다', s: { logic: 3 } },
+    { n: '응원 편지지', icon: 'letter', t: '친구에게 응원 손편지를 쓴다', s: { lang: 2, empathy: 1 } },
+    { n: '요가 매트', icon: 'moon', t: '스트레칭하고 일찍 잔다', s: { body: 3 } },
+    { n: '수험장 지도', icon: 'flag', t: '수험장 가는 길과 출발 시간을 분 단위로 계획한다', s: { org: 2, act: 1 } },
+    { n: '알람 시계', icon: 'moon', t: '수능 시간표에 맞춰 알람과 아침밥을 미리 준비해 둔다', s: { org: 1, detail: 1, body: 1 } },
+  ]},
+  { m: '11월', d: 'D-DAY', exam: '대학수학능력시험', q: '드디어 수능 날. 마지막 교시 종료 5분 전, 손이 떨린다.', choices: [
+    { t: '답안지 마킹을 처음부터 다시 확인한다', s: { detail: 3 } },
+    { t: '끝까지 헷갈린 한 문제를 다시 풀어 본다', s: { logic: 2, act: 1 } },
+    { t: '“1년 동안 수고했다”고 속으로 나에게 말해 준다', s: { empathy: 2, lang: 1 } },
+    { t: '어깨를 풀고 바른 자세로 끝까지 버틴다', s: { body: 2, act: 1 } },
+    { t: '가채점을 위해 내 답을 수험표 뒤에 옮겨 적는다', s: { org: 2, detail: 1 } },
+  ]},
+  { m: '11월', d: 'D-DAY', loc: 'gate', q: '수능이 끝났다! 교문을 나서며 가장 먼저 하고 싶은 것은?', choices: [
+    { n: '반 친구들', who: 'npc', g: 'm', look: 's2', icon: 'star', t: '반 친구들을 모아 파티를 기획한다', s: { lead: 3 } },
+    { n: '작업 노트', icon: 'music', t: '미뤄 둔 그림, 음악, 영상 작업을 시작한다', s: { art: 2, create: 1 } },
+    { n: '동네 서점', icon: 'book', t: '읽고 싶던 책을 쌓아 두고 몰아 읽는다', s: { lang: 2, inquiry: 1 } },
+    { n: '여권', icon: 'globe', t: '여권부터 만들고 해외여행 계획을 짠다', s: { global: 3 } },
+    { n: '헬스장 전단지', icon: 'shoe', t: '그동안 못 한 운동을 바로 시작한다', s: { body: 2, act: 1 } },
+    { n: '가채점표', icon: 'paper', t: '가채점을 하며 맞은 개수를 꼼꼼히 세어 본다', s: { detail: 2, logic: 1 } },
+  ]},
+];
+
+const MAJORS = [
+  { name: '컴퓨터공학과', w: { logic: 3, act: 2, inquiry: 1 },
+    why: '문제를 잘게 쪼개고, 직접 만들어 보며 해결하는 걸 좋아하는 당신에게 어울려요.',
+    ai: ['반복적인 코드 작성', '간단한 오류 찾기'], human: ['어떤 문제를 풀지 정하는 일', 'AI가 안전하게 작동하는지 책임지는 일'] },
+  { name: '법학과', w: { logic: 3, lang: 2, lead: 1 },
+    why: '옳고 그름을 끝까지 따져 보는 당신에게 어울려요.',
+    ai: ['판례 검색과 계약서 검토', '법률 문서 초안 작성'], human: ['억울한 사람 편에서 싸우기', '법과 양심 사이에서의 판단'] },
+  { name: '통계학과·데이터사이언스', w: { org: 3, logic: 2, detail: 1 },
+    why: '흩어진 숫자를 정리해서 숨은 패턴을 찾는 걸 좋아하는 당신에게 어울려요.',
+    ai: ['대량 데이터 계산과 시각화', '예측 모델 만들기'], human: ['어떤 질문을 데이터로 풀지 정하기', '숫자 뒤의 의미와 오류 읽어 내기'] },
+  { name: '문헌정보학과', w: { org: 3, inquiry: 2, empathy: 1 },
+    why: '필요한 정보를 찾아내고, 남들이 찾기 쉽게 정리하는 걸 좋아하는 당신에게 어울려요.',
+    ai: ['자료 분류와 목록 작성 보조', '이용자 질문에 대한 기본 안내'], human: ['믿을 수 있는 정보를 골라 알려 주기', '사람들에게 정보 활용법 가르치기'] },
+  { name: '생명과학과', w: { inquiry: 3, logic: 2, detail: 1 },
+    why: '작은 궁금증도 실험으로 확인해 보고 싶은 당신에게 어울려요.',
+    ai: ['유전자·단백질 데이터 분석', '논문 검색과 요약'], human: ['새로운 질문과 가설 세우기', '실험 결과의 의미 해석하기'] },
+  { name: '경제학과', w: { inquiry: 3, global: 2, logic: 1 },
+    why: '세상의 돈과 선택이 어떻게 움직이는지 궁금한 당신에게 어울려요.',
+    ai: ['경제 지표 분석과 예측', '뉴스와 보고서 요약'], human: ['정책이 사람들 삶에 미칠 영향 판단', '불확실한 상황에서의 해석과 설득'] },
+  { name: '환경공학과', w: { inquiry: 3, act: 2, empathy: 1 },
+    why: '지구와 자연을 지키는 방법을 직접 연구하고 실천하고 싶은 당신에게 어울려요.',
+    ai: ['대기·수질 데이터 분석', '기후 변화 예측 모델'], human: ['현장에서 오염 원인 찾아내기', '지역 사람들과 함께 해결책 만들기'] },
+  { name: '국어국문·문예창작학과', w: { lang: 3, create: 2, empathy: 1 },
+    why: '단어 하나에도 오래 고민하는 당신에게 어울려요.',
+    ai: ['맞춤법 검사와 문장 다듬기', '자료 조사와 요약'], human: ['내 경험에서 나온 이야기', '독자를 울리고 웃기는 문장'] },
+  { name: '교육학과', w: { lang: 3, empathy: 2, lead: 1 },
+    why: '누군가에게 알기 쉽게 설명하며 성장을 돕고 싶은 당신에게 어울려요.',
+    ai: ['학생별 맞춤 문제 추천', '채점과 학습 기록 정리'], human: ['학생의 마음을 읽고 동기를 북돋기', '함께 살아가는 법 가르치기'] },
+  { name: '심리학과', w: { empathy: 3, inquiry: 2, lang: 1 },
+    why: '사람의 마음이 왜 그렇게 움직이는지 궁금한 당신에게 어울려요.',
+    ai: ['설문 데이터 통계 분석', '기본적인 심리 정보 안내'], human: ['상담에서 쌓는 신뢰 관계', '사람마다 다른 사정을 이해하기'] },
+  { name: '사회복지학과', w: { empathy: 3, lead: 2, act: 1 },
+    why: '도움이 필요한 사람을 그냥 지나치지 못하는 당신에게 어울려요.',
+    ai: ['복지 대상자 서류 정리', '지원 제도 검색과 안내'], human: ['직접 찾아가 이야기를 듣는 일', '사람과 지역을 연결하는 일'] },
+  { name: '간호학과', w: { act: 3, empathy: 2, detail: 1 },
+    why: '아픈 사람 곁에서 직접 움직이며 돕고 싶은 당신에게 어울려요.',
+    ai: ['환자 기록 정리', '투약 시간 알림과 이상 징후 감지'], human: ['환자의 손을 잡아 주는 돌봄', '응급 상황에서의 빠른 판단과 처치'] },
+  { name: '기계공학과', w: { act: 3, logic: 2, inquiry: 1 },
+    why: '고장 난 건 일단 뜯어보고 싶은 당신에게 어울려요.',
+    ai: ['설계 시뮬레이션과 계산', '부품 불량 검사'], human: ['현장에서 직접 만들고 고치기', '안전을 책임지는 최종 판단'] },
+  { name: '식품영양·조리학과', w: { act: 3, create: 2, inquiry: 1 },
+    why: '직접 만들어 보고 새로운 맛을 상상하는 당신에게 어울려요.',
+    ai: ['영양 성분 계산과 식단 추천', '재고와 주문 관리'], human: ['손맛과 새로운 레시피 개발', '먹는 사람의 건강과 기분 살피기'] },
+  { name: '시각디자인학과', w: { create: 3, art: 2, act: 1 },
+    why: '머릿속 장면을 눈에 보이게 만드는 당신에게 어울려요.',
+    ai: ['시안 여러 개 빠르게 만들기', '이미지 보정과 배경 지우기'], human: ['브랜드만의 분위기와 이야기 정하기', '좋은 디자인을 골라내는 안목'] },
+  { name: '건축학과', w: { create: 3, logic: 2, detail: 1 },
+    why: '보기 좋으면서 튼튼한 공간을 상상하는 당신에게 어울려요.',
+    ai: ['도면 초안 생성과 구조 계산', '3D 모델링 보조'], human: ['사람이 머물고 싶은 공간 기획', '동네와 사람의 이야기를 담는 설계'] },
+  { name: '게임공학과', w: { create: 3, act: 2, logic: 1 },
+    why: '상상한 세계를 직접 만들어 사람들이 즐기게 하고 싶은 당신에게 어울려요.',
+    ai: ['그래픽 리소스와 코드 초안 생성', '버그 자동 탐지'], human: ['재미있는 게임 규칙과 이야기 설계', '플레이어의 마음을 읽는 기획'] },
+  { name: '연극영화·공연예술학과', w: { art: 3, body: 2, lang: 1 },
+    why: '무대 위에서 이야기를 몸으로 표현하는 당신에게 어울려요.',
+    ai: ['특수효과와 영상 편집', '대본 초안과 아이디어 정리'], human: ['관객과 눈을 맞추는 살아 있는 연기', '함께 만드는 무대의 호흡'] },
+  { name: '실용음악과', w: { art: 3, create: 2, detail: 1 },
+    why: '음악으로 마음을 표현하고 전하고 싶은 당신에게 어울려요.',
+    ai: ['반주 생성과 음원 믹싱 보조', '악보 정리'], human: ['무대 위 살아 있는 연주와 노래', '나만의 이야기가 담긴 곡 쓰기'] },
+  { name: '패션디자인학과', w: { art: 3, global: 2, create: 1 },
+    why: '옷으로 개성과 유행을 표현하는 걸 좋아하는 당신에게 어울려요.',
+    ai: ['유행 분석과 디자인 시안 생성', '가상 피팅'], human: ['사람과 문화에 맞는 스타일 제안', '손으로 완성하는 디테일'] },
+  { name: '경영학과', w: { lead: 3, logic: 2, empathy: 1 },
+    why: '사람과 자원을 모아 일이 굴러가게 만드는 당신에게 어울려요.',
+    ai: ['매출 데이터 분석', '보고서 초안 작성'], human: ['팀을 이끌고 설득하는 일', '정답이 없을 때 결정 내리기'] },
+  { name: '미디어커뮤니케이션학과', w: { lead: 3, lang: 2, create: 1 },
+    why: '이야기를 만들어 사람들 앞에서 전하는 걸 좋아하는 당신에게 어울려요.',
+    ai: ['영상 자막과 편집 보조', '기사 초안과 트렌드 분석'], human: ['진짜 뉴스와 가짜 뉴스 가려내기', '사람들의 마음을 움직이는 기획'] },
+  { name: '정치외교학과', w: { lead: 3, global: 2, lang: 1 },
+    why: '여러 사람과 나라 사이에서 의견을 모으고 이끄는 당신에게 어울려요.',
+    ai: ['국제 뉴스 요약과 여론 분석', '외교 문서 번역'], human: ['서로 다른 입장 사이의 협상', '공동체를 위한 정책 결정'] },
+  { name: '경찰행정학과', w: { body: 3, act: 2, lead: 1 },
+    why: '위급한 순간에 먼저 몸이 움직이는 당신에게 어울려요.',
+    ai: ['CCTV 분석과 범죄 패턴 예측', '사건 기록 정리'], human: ['현장에서 시민을 지키는 일', '억울한 사람이 없도록 판단하는 일'] },
+  { name: '체육교육과·스포츠과학과', w: { body: 3, lead: 2, empathy: 1 },
+    why: '몸을 움직이며 함께 뛰는 게 즐거운 당신에게 어울려요.',
+    ai: ['경기 영상 분석과 기록 측정', '맞춤형 운동 프로그램 추천'], human: ['선수와 학생의 마음을 다잡아 주는 코칭', '함께 땀 흘리며 보여 주는 시범'] },
+  { name: '영어영문·국제학부', w: { global: 3, lang: 2, inquiry: 1 },
+    why: '다른 나라의 말과 문화가 궁금한 당신에게 어울려요.',
+    ai: ['번역과 통역 초안', '외국어 문법 교정'], human: ['문화 차이를 이해하고 조율하기', '사람 사이의 신뢰를 쌓는 협상'] },
+  { name: '호텔관광경영학과', w: { global: 3, empathy: 2, act: 1 },
+    why: '낯선 손님도 편하게 만들어 주는 당신에게 어울려요.',
+    ai: ['예약 관리와 여행 일정 추천', '다국어 안내 챗봇'], human: ['손님 한 사람 한 사람을 위한 환대', '예상 못 한 문제를 웃으며 해결하기'] },
+  { name: '항공서비스학과', w: { global: 3, body: 2, empathy: 1 },
+    why: '하늘 위에서도 사람들을 편안하게 돌보고 싶은 당신에게 어울려요.',
+    ai: ['탑승 안내와 예약 관리', '다국어 기내 방송 보조'], human: ['위급 상황에서 승객 지키기', '승객 한 사람 한 사람을 위한 서비스'] },
+  { name: '약학과', w: { detail: 3, inquiry: 2, empathy: 1 },
+    why: '작은 실수도 놓치지 않고 사람들의 건강을 지키고 싶은 당신에게 어울려요.',
+    ai: ['약물 상호작용 검사', '신약 후보 물질 탐색'], human: ['환자에게 복약 방법을 설명하고 상담하기', '최종 조제의 책임과 판단'] },
+  { name: '회계·세무학과', w: { detail: 3, logic: 2, org: 1 },
+    why: '숫자 하나도 허투루 넘기지 않는 꼼꼼한 당신에게 어울려요.',
+    ai: ['장부 자동 입력과 계산', '세금 신고 초안 작성'], human: ['숫자 뒤에 숨은 문제 찾아내기', '고객과 신뢰를 쌓는 상담'] },
+];
+
+const REMARKS = {
+  logic:   '문제의 원인을 끝까지 따져 보고 단계별로 해결 방법을 찾는 논리적 사고력이 뛰어남',
+  inquiry: '궁금한 것이 생기면 스스로 자료를 찾아 확인하는 탐구심이 강함',
+  lang:    '자신의 생각을 글과 말로 정확하고 설득력 있게 표현하는 능력이 우수함',
+  empathy: '친구의 고민에 귀 기울이고 마음을 헤아리는 따뜻한 공감 능력을 지님',
+  create:  '익숙한 상황도 새로운 시각으로 바라보고 재미있게 표현하는 창의성이 돋보임',
+  lead:    '학급의 의견을 모으고 앞장서서 일을 추진하는 리더십을 발휘함',
+  act:     '생각에 그치지 않고 직접 몸을 움직여 끝까지 해내는 실행력이 뛰어남',
+  org:     '흩어진 정보를 체계적으로 분류하고 정리하여 모두가 쓰기 쉽게 만드는 능력이 탁월함',
+  body:    '체육 활동에 적극적으로 참여하며 건강한 체력과 끈기를 보여 줌',
+  global:  '다른 문화와 외국어에 관심이 많고 낯선 사람과도 자연스럽게 소통하는 국제 감각을 지님',
+  art:     '음악, 미술, 공연 같은 예술 활동에 감각이 뛰어나고 아름다움을 표현하는 데 관심이 많음',
+  detail:  '작은 실수도 놓치지 않고 꼼꼼하게 확인하며 맡은 일을 정확하게 처리함',
+};
+
+/* ---------- Map ---------- */
+const COLS = 11, ROWS = 9, T = 48;
+const SPOTS = [[2, 2], [5, 2], [8, 2], [2, 6], [5, 7], [8, 6]];
+const START = [5, 5];
+const STEP_MS = 150;
+
+const EXAM_DESKS = [];
+[2, 4, 6].forEach(y => [1, 3, 5, 7, 9].forEach(x => { if (!(x === 5 && y === 6)) EXAM_DESKS.push([x, y, 'examdesk']); }));
+
+const LOCS = {
+  classroom: { name: '교실', floor: ['#C99A62', '#BF8F57'], pattern: 'rows', wall: '#E8E1CF', feature: 'board',
+    props: [[4, 3, 'desk'], [6, 3, 'desk'], [4, 7, 'desk'], [6, 7, 'desk'], [5, 1, 'tdesk']] },
+  hallway: { name: '복도', floor: ['#DAD6CB', '#CFCABD'], pattern: 'check', wall: '#E3E6E8', feature: 'lockers',
+    props: [[0, 8, 'plant'], [10, 8, 'plant'], [0, 4, 'bench'], [10, 4, 'bench']] },
+  field: { name: '운동장', floor: ['#7DBA5A', '#74B052'], pattern: 'rows', wall: '#BFE3F2', feature: 'fence',
+    props: [[4, 1, 'goal'], [5, 1, 'goal'], [6, 1, 'goal'], [0, 8, 'tree'], [10, 8, 'tree'], [10, 4, 'tree']] },
+  library: { name: '도서관', floor: ['#5F8C86', '#598680'], pattern: 'rows', wall: '#E8E1CF', feature: 'books',
+    props: [[0, 3, 'shelf'], [0, 4, 'shelf'], [10, 3, 'shelf'], [10, 4, 'shelf'], [3, 4, 'table'], [7, 4, 'table']] },
+  cafeteria: { name: '급식실', floor: ['#E6E1D6', '#D9D2C3'], pattern: 'check', wall: '#F0EBE0', feature: 'menu',
+    props: [[4, 3, 'ctable'], [6, 3, 'ctable'], [4, 7, 'ctable'], [6, 7, 'ctable']] },
+  office: { name: '교무실', floor: ['#BEC3C8', '#B5BABF'], pattern: 'check', wall: '#E4E6E9', feature: 'cabinets',
+    props: [[4, 3, 'pcdesk'], [6, 3, 'pcdesk'], [0, 7, 'plant'], [10, 7, 'plant']] },
+  lab: { name: '과학실', floor: ['#CDD7DB', '#C2CCD0'], pattern: 'check', wall: '#EEF1F2', feature: 'periodic',
+    props: [[4, 3, 'labbench'], [6, 3, 'labbench'], [4, 7, 'labbench'], [6, 7, 'labbench']] },
+  gym: { name: '체육관', floor: ['#D8A868', '#CF9F5E'], pattern: 'rows', wall: '#9E2B3A', feature: 'curtain',
+    props: [[0, 1, 'speaker'], [10, 1, 'speaker']] },
+  gate: { name: '교문 앞', floor: ['#B9A89A', '#AE9C8D'], pattern: 'check', wall: '#BFE3F2', feature: 'gate',
+    props: [[0, 1, 'tree'], [10, 1, 'tree'], [0, 8, 'tree'], [10, 8, 'tree']] },
+  room: { name: '내 방', floor: ['#B98B5C', '#B08254'], pattern: 'rows', wall: '#E4D8E8', feature: 'window',
+    props: [[9, 1, 'bed'], [10, 1, 'bed'], [0, 1, 'plant'], [0, 8, 'plant']] },
+  exam: { name: '시험장', floor: ['#C99A62', '#BF8F57'], pattern: 'rows', wall: '#E8E1CF', feature: 'board',
+    props: [...EXAM_DESKS, [5, 1, 'proctor']] },
+};
+
+const LOOKS = {
+  s1: {},
+  s2: { hair: '#4A3020' },
+  s3: { hair: '#5A3A2A', jacket: '#3A4A6A' },
+  teacher: { hair: '#3A3A3A', jacket: '#6B6F7A', tie: '#2D3A5C', tieDark: '#1E2840', skirt: '#4A4F5C', skirtLine: '#3E434F' },
+  cook: { hair: '#FFFFFF', jacket: '#F4F4F4', tie: '#F4F4F4', tieDark: '#DDDDDD', pants: '#8E959E', skirt: '#8E959E', skirtLine: '#7A818A' },
+  foreign: { hair: '#E2C46A', jacket: '#7A2E3A', tie: '#2D3A5C', tieDark: '#1E2840' },
+  kid: { hair: '#4A3020', jacket: '#F2C14E', tie: '#F2C14E', tieDark: '#E0A92E', pants: '#3F6FB5', skirt: '#3F6FB5', skirtLine: '#345C98' },
+  senior: { hair: '#6B4A3A', jacket: '#4E7A5A', shirt: '#E8E1CF', tie: '#4E7A5A', tieDark: '#4E7A5A' },
+};
+
+/* ---------- Drawing ---------- */
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+
+function drawStudent(ctx, px, py, gender, dir, frame, U, look) {
+  const C = Object.assign({
+    hair: gender === 'm' ? '#2B2230' : '#3B2A28', skin: '#F4CFAE', jacket: '#2D3A5C', shirt: '#FFFFFF',
+    tie: '#C8283C', tieDark: '#9E1F30', pants: '#4A4F5C', skirt: '#5A6278', skirtLine: '#454C62',
+    sock: '#FFFFFF', shoe: '#1E1A1C', eye: '#1E1A1C', blush: '#F2A3A0',
+  }, look || {});
+  const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(px + x * U, py + y * U, w * U, h * U); };
+  ctx.fillStyle = 'rgba(0,0,0,.2)';
+  ctx.beginPath(); ctx.ellipse(px + 7 * U, py + 19.6 * U, 5 * U, 1.3 * U, 0, 0, Math.PI * 2); ctx.fill();
+
+  const lUp = frame === 1 ? 1 : 0, rUp = frame === 2 ? 1 : 0;
+  if (gender === 'm') {
+    r(4, 15, 2, 4 - lUp, C.pants); r(4, 19 - lUp, 2, 1, C.shoe);
+    r(8, 15, 2, 4 - rUp, C.pants); r(8, 19 - rUp, 2, 1, C.shoe);
+  } else {
+    r(4, 17, 2, 1, C.skin); if (!lUp) r(4, 18, 2, 1, C.sock); r(4, 19 - lUp, 2, 1, C.shoe);
+    r(8, 17, 2, 1, C.skin); if (!rUp) r(8, 18, 2, 1, C.sock); r(8, 19 - rUp, 2, 1, C.shoe);
+    r(3, 15, 8, 2, C.skirt); r(3, 16, 8, 1, C.skirtLine); r(5, 15, 1, 2, C.skirtLine); r(8, 15, 1, 2, C.skirtLine);
+  }
+  r(3, 9, 8, 6, C.jacket);
+  r(2, 9, 1, 5, C.jacket); r(11, 9, 1, 5, C.jacket);
+  r(2, 14, 1, 1, C.skin); r(11, 14, 1, 1, C.skin);
+  r(6, 8, 2, 1, C.skin);
+  if (dir === 'down') {
+    r(5, 9, 4, 1, C.shirt);
+    if (gender === 'm') r(6, 10, 2, 3, C.tie);
+    else { r(5, 10, 4, 1, C.tie); r(6, 10, 2, 1, C.tieDark); }
+  }
+  if (dir !== 'up') r(4, 3, 6, 5, C.skin);
+
+  if (dir === 'down') {
+    r(3, 0, 8, 3, C.hair);
+    if (gender === 'm') { r(3, 3, 1, 2, C.hair); r(10, 3, 1, 2, C.hair); r(4, 3, 3, 1, C.hair); }
+    else { r(2, 1, 1, 9, C.hair); r(11, 1, 1, 9, C.hair); r(3, 3, 1, 7, C.hair); r(10, 3, 1, 7, C.hair); r(4, 3, 6, 1, C.hair); }
+    r(5, 5, 1, 1, C.eye); r(8, 5, 1, 1, C.eye);
+    r(4, 6, 1, 1, C.blush); r(9, 6, 1, 1, C.blush);
+  } else if (dir === 'up') {
+    r(3, 0, 8, 8, C.hair);
+    if (gender === 'f') { r(2, 1, 1, 10, C.hair); r(11, 1, 1, 10, C.hair); r(3, 8, 8, 3, C.hair); }
+  } else if (dir === 'left') {
+    r(3, 0, 8, 3, C.hair); r(7, 3, 4, 3, C.hair); r(4, 3, 2, 1, C.hair);
+    if (gender === 'f') { r(8, 3, 3, 8, C.hair); r(11, 1, 1, 9, C.hair); }
+    r(5, 5, 1, 1, C.eye); r(5, 6, 1, 1, C.blush);
+  } else {
+    r(3, 0, 8, 3, C.hair); r(3, 3, 4, 3, C.hair); r(8, 3, 2, 1, C.hair);
+    if (gender === 'f') { r(3, 3, 3, 8, C.hair); r(2, 1, 1, 9, C.hair); }
+    r(8, 5, 1, 1, C.eye); r(8, 6, 1, 1, C.blush);
+  }
+}
+
+function drawIcon(ctx, name, cx, cy, s) {
+  ctx.save();
+  ctx.translate(cx, cy); ctx.scale(s, s);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = '#1C1A1F';
+  const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  const O = (x, y, rad, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill(); };
+  const poly = (pts, c) => { ctx.fillStyle = c; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); };
+  switch (name) {
+    case 'chat':
+      rr(ctx, -11, -10, 22, 15, 4); ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
+      poly([[-5, 4], [-8, 10], [1, 4]], '#FFFFFF');
+      [-5, 0, 5].forEach(x => O(x, -2.5, 1.7, '#1C1A1F')); break;
+    case 'phone': R(-6, -11, 12, 22, '#1C1A1F'); R(-4.5, -8.5, 9, 14, '#5FA3D9'); O(0, 8.5, 1.3, '#8E959E'); break;
+    case 'pencil':
+      ctx.rotate(-0.75); R(-3, -11, 6, 15, '#F2C14E'); R(-3, -11, 6, 3, '#F2A3A0');
+      poly([[-3, 4], [3, 4], [0, 10]], '#F4CFAE'); R(-1, 8, 2, 2, '#1C1A1F'); break;
+    case 'laptop': R(-9, -9, 18, 13, '#1C1A1F'); R(-7.5, -7.5, 15, 10, '#5FA3D9'); R(-12, 4, 24, 3, '#8E959E'); break;
+    case 'star': {
+      const pts = [];
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5; const rad = k % 2 ? 4.5 : 11; pts.push([Math.cos(a) * rad, Math.sin(a) * rad]); }
+      poly(pts, '#F2C14E'); break;
+    }
+    case 'poster': R(-8, -11, 16, 21, '#FFFFFF'); ctx.strokeRect(-8, -11, 16, 21); R(-5, -8, 10, 7, '#CF3148'); R(-5, 1, 10, 2, '#8E959E'); R(-5, 5, 7, 2, '#8E959E'); break;
+    case 'clipboard':
+      R(-8, -10, 16, 21, '#A4774A'); R(-6, -7, 12, 16, '#FFFFFF'); R(-3, -11, 6, 4, '#8E959E');
+      for (let k = 0; k < 3; k++) { R(-4, -4 + k * 4, 2, 2, '#CF3148'); R(-1, -4 + k * 4, 5, 1.5, '#8E959E'); } break;
+    case 'paper': R(-7, -10, 14, 19, '#FFFFFF'); ctx.strokeRect(-7, -10, 14, 19); for (let k = 0; k < 4; k++) R(-4, -6 + k * 4, 8, 1.5, '#8E959E'); break;
+    case 'ball':
+      O(0, 0, 10, '#FFFFFF'); ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
+      O(0, 0, 3.5, '#1C1A1F'); O(-7, -5, 2, '#1C1A1F'); O(7, -5, 2, '#1C1A1F'); O(0, 8, 2, '#1C1A1F'); break;
+    case 'camera': R(-11, -6, 22, 15, '#2B2B2B'); R(-5, -9, 8, 4, '#2B2B2B'); O(0, 1.5, 5, '#8E959E'); O(0, 1.5, 3, '#1C1A1F'); R(6, -4, 3, 2, '#F2C14E'); break;
+    case 'globe':
+      O(0, 0, 10, '#5FA3D9'); O(-3, -3, 4, '#4E9A45'); O(4, 3, 3.5, '#4E9A45'); O(-2, 6, 2, '#4E9A45');
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke(); break;
+    case 'flower':
+      R(-1, 0, 2, 11, '#3F7F35'); R(1, 4, 5, 2, '#3F7F35');
+      [[0, -9], [5, -4], [0, 1], [-5, -4]].forEach(([x, y]) => O(x, y, 3.6, '#F2A3A0')); O(0, -4, 3, '#F2C14E'); break;
+    case 'book':
+      R(-10, -8, 20, 15, '#2D3A5C'); R(-9, -7, 8.5, 13, '#FFFFFF'); R(0.5, -7, 8.5, 13, '#FFFFFF'); R(-0.5, -8, 1, 15, '#1C1A1F');
+      for (let k = 0; k < 3; k++) { R(-7, -4 + k * 3.5, 5, 1, '#8E959E'); R(2.5, -4 + k * 3.5, 5, 1, '#8E959E'); } break;
+    case 'bulb':
+      O(0, -3, 8, '#F7D86A'); R(-4, 4, 8, 5, '#8E959E'); R(-3, 9, 6, 2, '#5F6B73');
+      R(-12, -4, 3, 2, '#F2C14E'); R(9, -4, 3, 2, '#F2C14E'); R(-1, -14, 2, 3, '#F2C14E'); break;
+    case 'food':
+      ctx.fillStyle = '#CF3148'; ctx.beginPath(); ctx.arc(0, -1, 10, 0, Math.PI); ctx.closePath(); ctx.fill();
+      R(-11, -2, 22, 2, '#9E1F30');
+      ctx.strokeStyle = '#8E959E'; ctx.beginPath();
+      ctx.moveTo(-4, -5); ctx.quadraticCurveTo(-7, -9, -4, -13); ctx.moveTo(3, -5); ctx.quadraticCurveTo(0, -9, 3, -13); ctx.stroke(); break;
+    case 'magnifier':
+      ctx.save(); ctx.rotate(-0.8); R(-1.5, 4, 3, 9, '#6B4A2E'); ctx.restore();
+      O(-2, -2, 8, '#1C1A1F'); O(-2, -2, 6, '#BFE3F2'); break;
+    case 'heart':
+      ctx.fillStyle = '#CF3148'; ctx.beginPath(); ctx.moveTo(0, 9);
+      ctx.bezierCurveTo(-14, -1, -7, -13, 0, -5); ctx.bezierCurveTo(7, -13, 14, -1, 0, 9); ctx.fill(); break;
+    case 'shoe':
+      R(-10, -6, 11, 8, '#CF3148'); R(-10, 0, 21, 5, '#CF3148'); R(-11, 5, 23, 3, '#FFFFFF'); ctx.strokeRect(-11, 5, 23, 3);
+      R(-6, -4, 2, 2, '#FFFFFF'); R(-3, -2, 2, 2, '#FFFFFF'); break;
+    case 'music':
+      R(-5, -10, 2.5, 15, '#1C1A1F'); R(6, -8, 2.5, 15, '#1C1A1F');
+      poly([[-5, -10], [8.5, -8], [8.5, -4], [-5, -6]], '#1C1A1F'); O(-7, 5, 3.5, '#1C1A1F'); O(4, 7, 3.5, '#1C1A1F'); break;
+    case 'bandage': ctx.rotate(-0.6); R(-12, -4.5, 24, 9, '#F4CFAE'); R(-4, -4.5, 8, 9, '#E2B08A'); O(-8, 0, 1, '#C9956E'); O(8, 0, 1, '#C9956E'); break;
+    case 'flag': R(-8, -11, 2.5, 22, '#6B4A2E'); R(-5.5, -11, 14, 9, '#CF3148'); break;
+    case 'chart': R(-10, -10, 20, 20, '#FFFFFF'); ctx.strokeRect(-10, -10, 20, 20); R(-7, 2, 4, 6, '#5FA3D9'); R(-1.5, -3, 4, 11, '#CF3148'); R(4, -7, 4, 15, '#F2C14E'); break;
+    case 'wrench': ctx.rotate(0.8); R(-2, -3, 4, 14, '#8E959E'); O(0, -6, 5.5, '#8E959E'); R(-1.5, -12, 3, 5, '#FFFFFF'); break;
+    case 'flask':
+      R(-3, -11, 6, 6, '#BFE3F2');
+      poly([[-3, -5], [-10, 9], [10, 9], [3, -5]], '#BFE3F2');
+      poly([[-6.5, 2], [-10, 9], [10, 9], [6.5, 2]], '#6BC1A8'); break;
+    case 'mic': O(0, -5, 6, '#2B2B2B'); R(-1.5, 1, 3, 8, '#8E959E'); R(-5, 9, 10, 2, '#8E959E'); break;
+    case 'fan':
+      O(0, -2, 9, '#BFE3F2'); ctx.beginPath(); ctx.arc(0, -2, 9, 0, Math.PI * 2); ctx.stroke();
+      for (let k = 0; k < 3; k++) { ctx.save(); ctx.translate(0, -2); ctx.rotate(k * 2.09); ctx.fillStyle = '#5FA3D9'; ctx.beginPath(); ctx.ellipse(0, -4, 2.5, 4.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+      R(-1.5, 7, 3, 4, '#8E959E'); R(-6, 10, 12, 2, '#8E959E'); break;
+    case 'letter':
+      R(-11, -7, 22, 15, '#FFFFFF'); ctx.strokeRect(-11, -7, 22, 15);
+      ctx.beginPath(); ctx.moveTo(-11, -7); ctx.lineTo(0, 2); ctx.lineTo(11, -7); ctx.stroke(); O(0, 3, 2.5, '#CF3148'); break;
+    case 'drop': poly([[-6.2, 1], [0, -11], [6.2, 1]], '#5FA3D9'); O(0, 3, 6.5, '#5FA3D9'); O(-2, 3, 1.6, '#BFE3F2'); break;
+    case 'moon': O(0, 0, 9, '#F7D86A'); O(-3, -2, 2, '#E2C46A'); O(3, 3, 1.6, '#E2C46A'); O(2, -4, 1.1, '#E2C46A'); break;
+  }
+  ctx.restore();
+}
+
+function drawFloor(ctx, loc) {
+  for (let y = 1; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    const i = loc.pattern === 'check' ? (x + y) % 2 : y % 2;
+    ctx.fillStyle = loc.floor[i];
+    ctx.fillRect(x * T, y * T, T, T);
+    ctx.fillStyle = 'rgba(0,0,0,.05)';
+    if (loc.pattern === 'rows') ctx.fillRect(x * T + ((y % 2) ? 0 : T / 2), y * T, 1, T);
+    ctx.fillRect(x * T, y * T, T, 1);
+  }
+  if (loc.feature === 'curtain') {
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3;
+    ctx.strokeRect(T * 0.5, T * 1.5, T * 10, T * 7);
+    ctx.beginPath(); ctx.arc(T * 5.5, T * 5, T * 1.4, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (loc.feature === 'window') {
+    ctx.fillStyle = '#C7808A'; ctx.fillRect(T * 3.5, T * 3.5, T * 4, T * 2);
+    ctx.fillStyle = '#D9949D'; ctx.fillRect(T * 3.5 + 6, T * 3.5 + 6, T * 4 - 12, T * 2 - 12);
+  }
+}
+
+function drawWall(ctx, loc, scene) {
+  const W = COLS * T;
+  ctx.fillStyle = loc.wall; ctx.fillRect(0, 0, W, T);
+  const f = loc.feature;
+  const text = (str, x, y, size, color, family) => {
+    ctx.fillStyle = color; ctx.font = `700 ${size}px ${family || '"IBM Plex Sans KR", sans-serif'}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(str, x, y);
+  };
+  if (f === 'board') {
+    ctx.fillStyle = '#BFE3F2'; ctx.fillRect(10, 8, T * 1.6, 28); ctx.fillRect(W - 10 - T * 1.6, 8, T * 1.6, 28);
+    ctx.fillStyle = '#8A6A44'; ctx.fillRect(T * 3 - 4, 2, T * 5 + 8, 40);
+    ctx.fillStyle = '#2F5D46'; ctx.fillRect(T * 3, 6, T * 5, 32);
+    text(scene.exam ? scene.exam : '수능 ' + scene.d, T * 5.5, 23, scene.exam ? 17 : 20, '#EDEBE0');
+  } else if (f === 'lockers') {
+    for (let x = 0; x < COLS; x++) {
+      ctx.fillStyle = '#6E8FB0'; ctx.fillRect(x * T + 3, 4, T - 6, T - 10);
+      ctx.fillStyle = '#56779A'; for (let k = 0; k < 3; k++) ctx.fillRect(x * T + 12, 10 + k * 5, 24, 2);
+      ctx.fillStyle = '#D9DEE4'; ctx.fillRect(x * T + T - 12, 24, 3, 8);
+    }
+  } else if (f === 'fence') {
+    ctx.fillStyle = '#4F8F3A'; ctx.fillRect(0, 26, W, 22);
+    ctx.fillStyle = '#F4F4F4'; ctx.fillRect(0, 14, W, 3);
+    for (let x = 0; x < W; x += 24) ctx.fillRect(x + 10, 8, 3, 24);
+  } else if (f === 'books') {
+    const cols = ['#C8283C', '#2D3A5C', '#E2A93B', '#3F7F55', '#7C5AA6', '#E8E1CF'];
+    for (let x = 0; x < COLS; x++) {
+      ctx.fillStyle = '#7A5233'; ctx.fillRect(x * T, 2, T, T - 4);
+      for (let row = 0; row < 2; row++) for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = cols[(x * 3 + i + row * 2) % cols.length];
+        ctx.fillRect(x * T + 4 + i * 7, 6 + row * 19, 5, 15);
+      }
+    }
+  } else if (f === 'menu') {
+    ctx.fillStyle = '#B8BEC6'; ctx.fillRect(0, 32, W, 16);
+    ctx.fillStyle = '#2B2B2B'; ctx.fillRect(T * 3.5, 3, T * 4, 26);
+    text('오늘의 메뉴: 마라탕', T * 5.5, 16, 15, '#F4E7B0');
+    ctx.fillStyle = '#8E959E'; [1, 2, 9, 10].forEach(x => { ctx.beginPath(); ctx.ellipse(x * T + 24, 34, 14, 6, 0, 0, Math.PI * 2); ctx.fill(); });
+  } else if (f === 'cabinets') {
+    for (let x = 0; x < COLS; x++) {
+      if (x === 5) continue;
+      ctx.fillStyle = '#A7B0B8'; ctx.fillRect(x * T + 2, 4, T - 4, T - 8);
+      ctx.fillStyle = '#8D969E'; ctx.fillRect(x * T + 2, 22, T - 4, 2);
+    }
+    ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(T * 5.5, 24, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1C1A1F'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(T * 5.5, 24); ctx.lineTo(T * 5.5, 14); ctx.moveTo(T * 5.5, 24); ctx.lineTo(T * 5.5 + 8, 26); ctx.stroke();
+  } else if (f === 'periodic') {
+    const cols = ['#F2B8B5', '#F7D48A', '#B6E0B0', '#A9CFF0', '#D5C2F0'];
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 18; i++) {
+      if (j === 0 && i > 0 && i < 17) continue;
+      ctx.fillStyle = cols[(i + j) % cols.length];
+      ctx.fillRect(T * 2.6 + i * 18, 6 + j * 12, 16, 10);
+    }
+    ctx.fillStyle = '#9AA5AB'; [0, 10].forEach(x => ctx.fillRect(x * T + 4, 18, T - 8, 26));
+  } else if (f === 'curtain') {
+    for (let x = 0; x < W; x += 12) { ctx.fillStyle = (x / 12) % 2 ? '#8A2433' : '#9E2B3A'; ctx.fillRect(x, 0, 12, T); }
+    ctx.fillStyle = '#6B4A2E'; ctx.fillRect(0, T - 8, W, 8);
+    text('D-365 축제', T * 5.5, 20, 16, '#F7D86A');
+  } else if (f === 'gate') {
+    ctx.fillStyle = '#9C8E86'; ctx.fillRect(T * 3 + 8, 0, 32, T); ctx.fillRect(T * 7 + 8, 0, 32, T);
+    ctx.fillStyle = '#2F3B55'; ctx.fillRect(T * 4 + 2, 8, T * 3 - 4, 24);
+    text('D-365고등학교', T * 5.5, 20, 14, '#FFFFFF');
+  } else if (f === 'window') {
+    for (let x = 0; x < W; x += 16) { ctx.fillStyle = (x / 16) % 2 ? '#DCCDE2' : '#E4D8E8'; ctx.fillRect(x, 0, 16, T); }
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(T * 3.5 - 4, 2, T * 4 + 8, 40);
+    ctx.fillStyle = '#22305A'; ctx.fillRect(T * 3.5, 6, T * 4, 32);
+    ctx.fillStyle = '#F7D86A'; ctx.beginPath(); ctx.arc(T * 6.6, 18, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; [[T * 4, 14], [T * 4.6, 28], [T * 5.3, 12], [T * 7.1, 30]].forEach(([x, y]) => ctx.fillRect(x, y, 2, 2));
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(T * 5.5 - 1, 6, 2, 32);
+    ctx.fillStyle = '#7FA7D9'; ctx.fillRect(T * 3.5 - 14, 0, 12, 44); ctx.fillRect(T * 7.5 + 2, 0, 12, 44);
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(0, T - 3, W, 3);
+}
+
+function drawProp(ctx, type, x, y) {
+  const X = x * T, Y = y * T;
+  const r = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(X + a, Y + b, w, h); };
+  const circ = (a, b, rad, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X + a, Y + b, rad, 0, Math.PI * 2); ctx.fill(); };
+  switch (type) {
+    case 'desk': r(8, 26, 4, 18, '#6B4A2E'); r(36, 26, 4, 18, '#6B4A2E'); r(4, 14, 40, 14, '#A4774A'); r(10, 16, 12, 8, '#F2EEE3'); break;
+    case 'tdesk': r(2, 10, 44, 24, '#7A5233'); r(2, 30, 44, 6, '#5E3F27'); r(30, 4, 10, 8, '#C8283C'); break;
+    case 'shelf': r(4, 2, 40, 44, '#7A5233');
+      ['#C8283C', '#2D3A5C', '#E2A93B', '#3F7F55', '#7C5AA6'].forEach((c, i) => { r(8 + i * 7, 6, 5, 16, c); r(8 + i * 7, 26, 5, 16, c); }); break;
+    case 'table': r(8, 28, 4, 16, '#8A6A44'); r(36, 28, 4, 16, '#8A6A44'); r(2, 12, 44, 18, '#C79A6A'); r(10, 16, 10, 7, '#F2EEE3'); r(26, 15, 10, 7, '#A9CFF0'); break;
+    case 'ctable': r(8, 30, 4, 14, '#8E959E'); r(36, 30, 4, 14, '#8E959E'); r(2, 14, 44, 18, '#F4F4F4'); r(2, 30, 44, 3, '#C9CED4');
+      r(8, 17, 12, 10, '#C9CED4'); r(28, 17, 12, 10, '#C9CED4'); circ(14, 22, 3, '#D9493A'); circ(34, 22, 3, '#E2A93B'); break;
+    case 'pcdesk': r(2, 18, 44, 16, '#8A6A44'); r(6, 34, 4, 10, '#6B4A2E'); r(38, 34, 4, 10, '#6B4A2E'); r(14, 2, 20, 14, '#1E1A1C'); r(16, 4, 16, 10, '#5FA3D9'); r(22, 16, 4, 3, '#1E1A1C'); break;
+    case 'labbench': r(2, 14, 44, 28, '#5F6B73'); r(2, 14, 44, 6, '#2E3438'); r(10, 4, 8, 12, '#B5E2EE'); r(10, 10, 8, 6, '#6BC1A8'); circ(34, 10, 5, '#F2B8B5'); break;
+    case 'plant': r(16, 30, 16, 14, '#B5653A'); circ(24, 22, 12, '#4E9A45'); circ(18, 18, 7, '#5DAE52'); break;
+    case 'tree': r(20, 28, 8, 18, '#7A5233'); circ(24, 20, 17, '#3F7F35'); circ(16, 16, 9, '#4E9A45'); circ(30, 14, 8, '#4E9A45'); break;
+    case 'bench': r(2, 20, 44, 10, '#A4774A'); r(6, 30, 4, 12, '#6B4A2E'); r(38, 30, 4, 12, '#6B4A2E'); break;
+    case 'goal': r(0, 4, T, 4, '#FFFFFF');
+      ctx.fillStyle = 'rgba(255,255,255,.45)';
+      for (let i = 0; i < T; i += 8) ctx.fillRect(X + i, Y + 8, 1, 30);
+      for (let j = 8; j < 38; j += 8) ctx.fillRect(X, Y + j, T, 1);
+      if (x === 4) r(0, 4, 4, 36, '#FFFFFF');
+      if (x === 6) r(T - 4, 4, 4, 36, '#FFFFFF');
+      break;
+    case 'speaker': r(12, 2, 24, 42, '#222222'); circ(24, 14, 7, '#555555'); circ(24, 32, 9, '#555555'); break;
+    case 'bed': r(0, 4, T, 42, '#8A6A44'); r(2, 6, T - 4, 38, '#FFFFFF'); r(2, 18, T - 4, 26, '#7FA7D9'); r(2, 18, T - 4, 3, '#6A92C4');
+      if (x === 9) r(8, 8, 26, 9, '#F4F1EA'); break;
+    case 'examdesk': {
+      r(6, 18, 36, 12, '#A4774A'); r(8, 30, 3, 10, '#6B4A2E'); r(37, 30, 3, 10, '#6B4A2E'); r(14, 20, 12, 7, '#FFFFFF');
+      // desks sit on odd columns and even rows; alternate boys and girls like a checkerboard
+      const col = (x - 1) / 2, row = y / 2;
+      const look = ['s1', 's2', 's3'][(col * 2 + row) % 3];
+      drawStudent(ctx, X + 3, Y - 2, (col + row) % 2 ? 'f' : 'm', 'up', 0, 3, LOOKS[look]);
+      break;
+    }
+    case 'proctor': drawStudent(ctx, X + 3, Y - 12, 'm', 'down', 0, 3, LOOKS.teacher); break;
+  }
+}
+
+function pill(ctx, text, cx, y, bg) {
+  ctx.font = '700 13px "IBM Plex Sans KR", "Malgun Gothic", sans-serif';
+  const w = ctx.measureText(text).width + 14;
+  const x = Math.max(2, Math.min(COLS * T - w - 2, cx - w / 2));
+  rr(ctx, x, y, w, 20, 10); ctx.fillStyle = bg; ctx.fill();
+  ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x + 7, y + 10.5);
+}
+
+function dirToward(fx, fy, tx, ty) {
+  const dx = tx - fx, dy = ty - fy;
+  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+}
+
+/* ---------- App state ---------- */
+const app = document.getElementById('app');
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let state = { screen: 'start', i: 0, picks: [], name: '', gender: '' };
+let game = null;
+let raf = 0;
+const held = new Set();
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function stopLoop() { cancelAnimationFrame(raf); raf = 0; }
+
+function render() {
+  stopLoop();
+  game = null; held.clear();
+  if (state.screen === 'start') renderStart();
+  else if (state.screen === 'scene') renderScene();
+  else renderResult();
+}
+
+function nextScene() {
+  state.i++;
+  if (state.i >= SCENES.length) state.screen = 'result';
+  render(); window.scrollTo(0, 0);
+}
+
+/* ---------- Start ---------- */
+function renderStart() {
+  app.innerHTML = `
+    <div class="head"><span>2027학년도 진로적성 모의평가</span><span>제1교시</span></div>
+    <div class="body start">
+      <div class="big-d">D-365</div>
+      <h1>고3 인생 RPG</h1>
+      <p>수험생이 되어 학교 곳곳을 돌아다니세요. 친구나 선생님, 눈에 띄는 물건에 다가가 마음에 드는 걸 고르면 돼요. 모의고사와 수능 날에는 직접 답안지에 마킹해요. 수능이 끝나면 어울리는 전공을 알려 드려요.</p>
+      <div class="facts"><span>23개 상황</span><span>상황마다 선택지 6개</span><span>시험 3번 · 5지선다</span><span>전공 30개</span><span>약 7분</span></div>
+      <div class="stack">
+        <span class="label">캐릭터 선택</span>
+        <div class="who">
+          <button data-g="m" aria-pressed="${state.gender === 'm'}"><canvas width="96" height="126"></canvas><span class="tag"><span class="mini-bubble"></span>남학생</span></button>
+          <button data-g="f" aria-pressed="${state.gender === 'f'}"><canvas width="96" height="126"></canvas><span class="tag"><span class="mini-bubble"></span>여학생</span></button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="name">성명 (선택)</label>
+        <input id="name" maxlength="10" autocomplete="off" placeholder="이름을 적어 주세요" value="${esc(state.name)}">
+      </div>
+      <div class="row"><button class="btn" id="go" ${state.gender ? '' : 'disabled'}>시험 시작</button><span class="muted" id="go-hint" style="font-size:14px">${state.gender ? '' : '캐릭터를 먼저 골라 주세요'}</span></div>
+      <p class="note">※ 정답은 없습니다. 끌리는 대로 고르세요.</p>
+    </div>`;
+
+  app.querySelectorAll('.who button').forEach(btn => {
+    const c = btn.querySelector('canvas').getContext('2d');
+    c.imageSmoothingEnabled = false;
+    drawStudent(c, 6, 2, btn.dataset.g, 'down', 0, 6);
+    btn.addEventListener('click', () => {
+      state.gender = btn.dataset.g;
+      app.querySelectorAll('.who button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      document.getElementById('go').disabled = false;
+      document.getElementById('go-hint').textContent = '';
+    });
+  });
+  const input = document.getElementById('name');
+  const start = () => {
+    if (!state.gender) return;
+    state.name = input.value.trim();
+    state.screen = 'scene'; state.i = 0; state.picks = [];
+    render(); window.scrollTo(0, 0);
+  };
+  document.getElementById('go').addEventListener('click', start);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') start(); });
+}
+
+/* ---------- Scene ---------- */
+function renderScene() {
+  const s = SCENES[state.i];
+  const loc = LOCS[s.exam ? 'exam' : s.loc];
+  const place = s.exam || loc.name;
+  const ticks = SCENES.map((sc, j) => `<i class="${j <= state.i ? 'on' : ''} ${sc.exam ? 'exam' : ''}"></i>`).join('');
+
+  app.innerHTML = `
+    <div class="head"><span>${s.m} · ${place}</span><span class="d">${s.d}</span></div>
+    <div class="body">
+      <div class="progress"><span class="count">${state.i + 1} / ${SCENES.length}</span><div class="ticks" style="grid-template-columns:repeat(${SCENES.length},1fr)" aria-hidden="true">${ticks}</div></div>
+      <div class="dialog">
+        <span class="where">${s.exam ? '시험 시간' : loc.name}</span>
+        <p class="situation">${esc(s.q)}</p>
+      </div>
+      <div class="stage">
+        <canvas id="map" width="${COLS * T}" height="${ROWS * T}" tabindex="0" aria-label="${place} 지도"></canvas>
+        <div class="card ${s.exam ? 'exam' : ''}" aria-hidden="true"><span class="l">${s.m} · ${place}</span><span class="m">${s.d}</span></div>
+      </div>
+      ${s.exam ? `
+        <div class="omr-card">
+          <div class="omr-head"><span>${s.exam} 답안지</span><span>컴퓨터용 사인펜</span></div>
+          <div class="choices">
+            ${s.choices.map((c, j) => `
+              <button class="choice" data-j="${j}">
+                <span class="bubble" aria-hidden="true">${j + 1}</span>
+                <span>${esc(c.t)}</span>
+              </button>`).join('')}
+          </div>
+          <p class="note" id="exam-note">한 번 마킹하면 고칠 수 없어요. 숫자 키 1~5로도 마킹할 수 있어요.</p>
+        </div>` : `
+        <div class="talk" id="talk" aria-live="polite"></div>
+        <div class="stack">
+          <span class="section-label">주변에 보이는 것</span>
+          <div class="chips">${s.choices.map((c, j) => `<button class="chip" data-j="${j}">${esc(c.n)}</button>`).join('')}</div>
+        </div>`}
+      ${state.i > 0 ? '<div><button class="link" id="back">이전 상황으로</button></div>' : ''}
+    </div>`;
+
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const back = document.getElementById('back');
+  if (back) back.addEventListener('click', () => { state.i--; state.picks.length = state.i; render(); });
+
+  if (s.exam) {
+    game = { exam: true, picking: false };
+    const paint = () => drawExam(ctx, s, loc);
+    paint();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (game && game.exam) paint(); });
+    app.querySelectorAll('.choice').forEach(btn => btn.addEventListener('click', () => markExam(Number(btn.dataset.j))));
+    return;
+  }
+
+  const objs = s.choices.map((c, j) => ({ x: SPOTS[j][0], y: SPOTS[j][1] }));
+  const blocked = new Set([...loc.props, ...(s.deco || [])].map(([x, y]) => y * COLS + x));
+  objs.forEach(o => blocked.add(o.y * COLS + o.x));
+
+  game = {
+    exam: false, scene: s, loc, objs,
+    x: START[0], y: START[1], sx: 0, sy: 0, tx: 0, ty: 0, t: 0,
+    moving: false, path: [], dir: 'up', steps: 0,
+    near: -1, talk: -1, autoTalk: -1, picking: false, chosen: -1,
+    walkable: (x, y) => x >= 0 && x < COLS && y >= 1 && y < ROWS && !blocked.has(y * COLS + x),
+  };
+  updateTalk();
+
+  canvas.addEventListener('click', e => {
+    if (!game || game.picking) return;
+    const rect = canvas.getBoundingClientRect();
+    const tx = Math.floor((e.clientX - rect.left) / rect.width * COLS);
+    const ty = Math.floor((e.clientY - rect.top) / rect.height * ROWS);
+    // tapping the label above an object counts as tapping the object
+    let o = objAt(tx, ty);
+    if (o < 0) o = objAt(tx, ty + 1);
+    if (o >= 0) { walkToObj(o); return; }
+    if (game.talk >= 0) closeTalk();
+    const from = game.moving ? [game.tx, game.ty] : [game.x, game.y];
+    const path = bfs(from[0], from[1], tx, ty);
+    if (path) { game.path = path; game.autoTalk = -1; }
+  });
+
+  app.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+    if (game && !game.picking) walkToObj(Number(btn.dataset.j));
+  }));
+
+  let last = performance.now();
+  const loop = now => {
+    if (!game || game.exam) return;
+    const dt = Math.min(now - last, 50); last = now;
+    update(dt);
+    draw(ctx, now);
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+}
+
+function objAt(x, y) { return game.objs.findIndex(o => o.x === x && o.y === y); }
+
+function adjacentTo(j, x, y) { const o = game.objs[j]; return Math.abs(o.x - x) + Math.abs(o.y - y) === 1; }
+
+function findNear() {
+  if (game.moving) return -1;
+  const fx = game.x + (game.dir === 'right' ? 1 : game.dir === 'left' ? -1 : 0);
+  const fy = game.y + (game.dir === 'down' ? 1 : game.dir === 'up' ? -1 : 0);
+  const facing = objAt(fx, fy);
+  if (facing >= 0) return facing;
+  return game.objs.findIndex((_, j) => adjacentTo(j, game.x, game.y));
+}
+
+function bfs(sx, sy, tx, ty) {
+  if (!game.walkable(tx, ty)) return null;
+  if (sx === tx && sy === ty) return [];
+  const key = (x, y) => y * COLS + x;
+  const prev = new Map([[key(sx, sy), null]]);
+  const q = [[sx, sy]];
+  while (q.length) {
+    const [x, y] = q.shift();
+    if (x === tx && y === ty) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (!game.walkable(nx, ny) || prev.has(key(nx, ny))) continue;
+      prev.set(key(nx, ny), [x, y]);
+      q.push([nx, ny]);
+    }
+  }
+  if (!prev.has(key(tx, ty))) return null;
+  const path = [];
+  let cur = [tx, ty];
+  while (cur && !(cur[0] === sx && cur[1] === sy)) { path.unshift(cur); cur = prev.get(key(cur[0], cur[1])); }
+  return path;
+}
+
+function walkToObj(j) {
+  const o = game.objs[j];
+  if (!game.moving && adjacentTo(j, game.x, game.y)) { game.path = []; faceTo(j); openTalk(j); return; }
+  const from = game.moving ? [game.tx, game.ty] : [game.x, game.y];
+  let best = null;
+  for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+    const p = bfs(from[0], from[1], o.x + dx, o.y + dy);
+    if (p && (!best || p.length < best.length)) best = p;
+  }
+  if (best) { if (game.talk >= 0) closeTalk(); game.path = best; game.autoTalk = j; }
+}
+
+function faceTo(j) { const o = game.objs[j]; game.dir = dirToward(game.x, game.y, o.x, o.y); }
+
+function startStep(nx, ny) {
+  game.dir = dirToward(game.x, game.y, nx, ny);
+  game.sx = game.x; game.sy = game.y; game.tx = nx; game.ty = ny;
+  game.moving = true; game.t = 0; game.steps++;
+  setNear(-1);
+}
+
+function tryStep(dx, dy) {
+  if (!game || game.exam || game.moving || game.picking) return;
+  if (game.talk >= 0) { closeTalk(); return; }
+  game.path = []; game.autoTalk = -1;
+  const nx = game.x + dx, ny = game.y + dy;
+  game.dir = dirToward(0, 0, dx, dy);
+  const o = objAt(nx, ny);
+  if (o >= 0) { openTalk(o); return; }
+  if (game.walkable(nx, ny)) startStep(nx, ny);
+  else setNear(findNear());
+}
+
+const KEYS = {
+  ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+  w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0], W: [0, -1], S: [0, 1], A: [-1, 0], D: [1, 0],
+};
+
+function update(dt) {
+  if (!game.moving && !game.picking && game.talk < 0) {
+    if (game.path.length) { const [nx, ny] = game.path.shift(); startStep(nx, ny); }
+    else if (held.size) { const k = [...held].pop(); tryStep(...KEYS[k]); }
+  }
+  if (game.moving) {
+    game.t += dt / (reduceMotion ? 60 : STEP_MS);
+    if (game.t >= 1) {
+      game.x = game.tx; game.y = game.ty; game.moving = false; game.t = 0;
+      if (!game.path.length) arrive();
+    }
+  }
+}
+
+function arrive() {
+  if (game.autoTalk >= 0) {
+    const j = game.autoTalk; game.autoTalk = -1;
+    if (adjacentTo(j, game.x, game.y)) { faceTo(j); openTalk(j); return; }
+  }
+  setNear(findNear());
+}
+
+function setNear(j) {
+  if (game.near === j) return;
+  game.near = j;
+  updateTalk();
+}
+
+function openTalk(j) { if (game.picking) return; game.talk = j; game.near = j; updateTalk(); }
+function closeTalk() { if (game.picking) return; game.talk = -1; game.near = findNear(); updateTalk(); }
+
+function updateTalk() {
+  const box = document.getElementById('talk');
+  if (!box || !game) return;
+  const s = game.scene;
+  app.querySelectorAll('.chip').forEach(b => b.classList.toggle('near', Number(b.dataset.j) === (game.talk >= 0 ? game.talk : game.near)));
+  box.classList.toggle('done', game.picking);
+  if (game.picking) {
+    const c = s.choices[game.chosen];
+    box.innerHTML = `<span class="name">결정!</span><p class="line">${esc(c.t)}</p><p class="hint">${state.i + 1 < SCENES.length ? '다음 장소로 이동해요…' : '수능이 끝났어요. 성적표를 확인하세요!'}</p>`;
+    return;
+  }
+  if (game.talk >= 0) {
+    const c = s.choices[game.talk];
+    box.innerHTML = `<span class="name">${esc(c.n)}</span><p class="line">${esc(c.t)}</p>
+      <div class="row"><button class="btn" id="yes">이걸로 할래!</button><button class="btn ghost" id="no">다른 것도 볼래</button></div>`;
+    document.getElementById('yes').addEventListener('click', () => choose(game.talk));
+    document.getElementById('no').addEventListener('click', closeTalk);
+  } else if (game.near >= 0) {
+    const c = s.choices[game.near];
+    box.innerHTML = `<span class="name">${esc(c.n)}</span><p class="hint"><kbd>Space</kbd>를 누르거나 버튼을 눌러 ${c.who === 'npc' ? '말을 걸어' : '살펴'} 보세요.</p>
+      <div class="row"><button class="btn ghost" id="look">${c.who === 'npc' ? '말 걸기' : '살펴보기'}</button></div>`;
+    document.getElementById('look').addEventListener('click', () => openTalk(game.near));
+  } else {
+    box.innerHTML = `<p class="hint"><kbd>방향키</kbd> <kbd>WASD</kbd>로 걷거나 지도를 탭하세요. 사람이나 물건에 다가가면 말을 걸거나 살펴볼 수 있어요. 아래 이름을 누르면 그쪽으로 걸어가요.</p>`;
+  }
+}
+
+function choose(j) {
+  if (!game || game.picking || j < 0) return;
+  game.chosen = j; game.talk = -1; game.picking = true; game.path = []; held.clear();
+  state.picks[state.i] = j;
+  updateTalk();
+  setTimeout(nextScene, reduceMotion ? 500 : 1100);
+}
+
+function markExam(j) {
+  if (!game || !game.exam || game.picking) return;
+  game.picking = true;
+  state.picks[state.i] = j;
+  const btn = app.querySelector(`.choice[data-j="${j}"]`);
+  if (btn) btn.classList.add('picked');
+  const note = document.getElementById('exam-note');
+  if (note) note.textContent = `${j + 1}번 마킹 완료! 시험지를 걷습니다…`;
+  setTimeout(nextScene, reduceMotion ? 400 : 1000);
+}
+
+function draw(ctx, now) {
+  const { scene, loc } = game;
+  ctx.clearRect(0, 0, COLS * T, ROWS * T);
+  drawFloor(ctx, loc);
+  drawWall(ctx, loc, scene);
+
+  const fx = game.moving ? game.sx + (game.tx - game.sx) * game.t : game.x;
+  const fy = game.moving ? game.sy + (game.ty - game.sy) * game.t : game.y;
+  const items = loc.props.map(([x, y, type]) => ({ y, fn: () => drawProp(ctx, type, x, y) }));
+  (scene.deco || []).forEach(([x, y, look, gender]) => items.push({ y, fn: () =>
+    drawStudent(ctx, x * T + 3, y * T - 12, gender, dirToward(x, y, fx, fy), 0, 3, LOOKS[look]) }));
+
+  scene.choices.forEach((c, j) => {
+    const o = game.objs[j];
+    const X = o.x * T, Y = o.y * T;
+    const active = game.talk === j || game.near === j || game.chosen === j;
+    items.push({ y: o.y, fn: () => {
+      if (c.who === 'npc') {
+        const dir = active ? dirToward(o.x, o.y, fx, fy) : 'down';
+        drawStudent(ctx, X + 3, Y - 12, c.g || 'm', dir, 0, 3, LOOKS[c.look || 's1']);
+        ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(X + 42, Y - 8, 11, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#1C1A1F'; ctx.lineWidth = 1.5; ctx.stroke();
+        drawIcon(ctx, c.icon, X + 42, Y - 8, 0.62);
+      } else {
+        const bob = reduceMotion ? 0 : Math.sin(now / 400 + j) * 2;
+        ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(X + 24, Y + 42, 13, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.94)'; ctx.beginPath(); ctx.arc(X + 24, Y + 22 + bob, 17, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = active ? '#CF3148' : 'rgba(28,26,31,.35)'; ctx.lineWidth = active ? 3 : 2; ctx.stroke();
+        drawIcon(ctx, c.icon, X + 24, Y + 22 + bob, 1);
+      }
+    }});
+  });
+
+  const frame = game.moving ? (game.t < 0.5 ? (game.steps % 2 ? 1 : 2) : 0) : 0;
+  items.push({ y: fy + 0.01, fn: () => drawStudent(ctx, fx * T + 3, fy * T - 12, state.gender || 'm', game.dir, frame, 3) });
+  items.sort((a, b) => a.y - b.y).forEach(it => it.fn());
+
+  scene.choices.forEach((c, j) => {
+    const o = game.objs[j];
+    const active = game.talk === j || game.near === j || game.chosen === j;
+    const bounce = active && !reduceMotion ? Math.abs(Math.sin(now / 220)) * -3 : 0;
+    const top = c.who === 'npc' ? o.y * T - 36 : o.y * T - 16;
+    pill(ctx, (active ? '▶ ' : '') + c.n, o.x * T + 24, top + bounce, active ? '#CF3148' : 'rgba(28,26,31,.82)');
+  });
+
+  if (game.picking) { ctx.fillStyle = 'rgba(28,26,31,.10)'; ctx.fillRect(0, 0, COLS * T, ROWS * T); }
+}
+
+function drawExam(ctx, scene, loc) {
+  ctx.clearRect(0, 0, COLS * T, ROWS * T);
+  drawFloor(ctx, loc);
+  drawWall(ctx, loc, scene);
+  [...loc.props].sort((a, b) => a[1] - b[1]).forEach(([x, y, type]) => {
+    drawProp(ctx, type, x, y);
+    if (x === 5 && y === 4) drawPlayerDesk(ctx);
+  });
+  pill(ctx, '나', 5 * T + 24, 6 * T - 22, '#CF3148');
+}
+
+function drawPlayerDesk(ctx) {
+  const X = 5 * T, Y = 6 * T;
+  ctx.fillStyle = '#A4774A'; ctx.fillRect(X + 6, Y + 18, 36, 12);
+  ctx.fillStyle = '#6B4A2E'; ctx.fillRect(X + 8, Y + 30, 3, 10); ctx.fillRect(X + 37, Y + 30, 3, 10);
+  ctx.fillStyle = '#FBE6E9'; ctx.fillRect(X + 14, Y + 20, 14, 7);
+  drawStudent(ctx, X + 3, Y - 2, state.gender || 'm', 'up', 0, 3);
+}
+
+window.addEventListener('keydown', e => {
+  if (state.screen !== 'scene' || !game) return;
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT') return;
+  if (game.exam) {
+    if (['1', '2', '3', '4', '5'].includes(e.key)) { e.preventDefault(); markExam(Number(e.key) - 1); }
+    return;
+  }
+  if (KEYS[e.key]) {
+    e.preventDefault();
+    if (!held.has(e.key)) { held.add(e.key); tryStep(...KEYS[e.key]); }
+    return;
+  }
+  if (e.key === 'Escape') { closeTalk(); return; }
+  if ((e.key === ' ' || e.key === 'Enter') && tag !== 'BUTTON') {
+    e.preventDefault();
+    if (game.talk >= 0) choose(game.talk);
+    else if (game.near >= 0 && !game.moving) { faceTo(game.near); openTalk(game.near); }
+  }
+});
+window.addEventListener('keyup', e => held.delete(e.key));
+window.addEventListener('blur', () => held.clear());
+
+/* ---------- Result ---------- */
+function totals() {
+  const t = {};
+  STATS.forEach(s => t[s.k] = 0);
+  state.picks.forEach((c, i) => { const add = SCENES[i].choices[c].s; for (const k in add) t[k] += add[k]; });
+  return t;
+}
+
+function rankMajors(t) {
+  const normT = Math.sqrt(STATS.reduce((a, s) => a + t[s.k] ** 2, 0)) || 1;
+  return MAJORS.map(m => {
+    let dot = 0, nm = 0;
+    STATS.forEach(s => { const w = m.w[s.k] || 0; dot += w * t[s.k]; nm += w * w; });
+    return { m, score: dot / (Math.sqrt(nm) * normT) };
+  }).sort((a, b) => b.score - a.score);
+}
+
+function grade(v, max) {
+  const r = max ? v / max : 0;
+  const idx = [0.9, 0.75, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1].findIndex(c => r >= c);
+  return idx === -1 ? 9 : idx + 1;
+}
+
+function examNumber() {
+  let h = 7;
+  for (const ch of state.picks.join('') + state.name + state.gender) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return '27-' + String(h % 100000000).padStart(8, '0');
+}
+
+function renderResult() {
+  const t = totals();
+  const max = Math.max(...STATS.map(s => t[s.k]));
+  const ranked = rankMajors(t);
+  const best = ranked[0].m;
+  const also = ranked.slice(1, 3).map(r => r.m.name);
+  const byScore = [...STATS].sort((a, b) => t[b.k] - t[a.k]);
+  const name = state.name || '고3 수험생';
+
+  const rows = STATS.map(s => {
+    const gr = grade(t[s.k], max);
+    const pct = max ? Math.round(t[s.k] / max * 100) : 0;
+    return `<tr><td>${s.name}</td><td>${t[s.k]}</td><td class="barcell"><div class="bar"><i style="width:${pct}%"></i></div></td><td><span class="grade ${gr <= 2 ? 'top' : ''}">${gr}</span></td></tr>`;
+  }).join('');
+
+  const remark = `${REMARKS[byScore[0].k]}. 또한 ${REMARKS[byScore[1].k]}. 이러한 특성으로 보아 ${best.name} 분야에서 크게 성장할 것으로 기대됨.`;
+
+  /* explain the result: the major's key stats, the picks that fed them, and the full lists */
+  const SHORT = { logic: '논리', inquiry: '탐구', lang: '언어', empathy: '공감', create: '창의', lead: '리더십', act: '실행', org: '정리', body: '체력', global: '국제', art: '예술', detail: '꼼꼼' };
+  const chips = s => Object.entries(s).map(([k, v]) => `<span class="chip-s ${best.w[k] ? 'key' : ''}">${SHORT[k]} +${v}</span>`).join('');
+  const where = sc => sc.exam ? sc.exam : `${sc.m} · ${LOCS[sc.loc].name}`;
+  const label = (sc, j) => sc.exam ? `${j + 1}번` : sc.choices[j].n;
+  const whyHtml = `
+      <details class="more"><summary>내가 고른 선택 전체 보기 (${SCENES.length}개)</summary>
+        <p class="hint-s">빨간 칩은 ${best.name} 기준에 들어가는 능력치예요.</p>
+        <ol class="pick-list">${state.picks.map((c, i) => { const sc = SCENES[i]; return `<li><span class="scene-h">${i + 1}. ${esc(where(sc))}</span><b>${esc(label(sc, c))}</b> ${esc(sc.choices[c].t)}<br>${chips(sc.choices[c].s)}</li>`; }).join('')}</ol>
+      </details>
+      <details class="more"><summary>모든 상황과 선택지 점수 보기</summary>
+        <p class="hint-s">✔ 표시가 내가 고른 선택지예요. 선택지마다 3점씩 능력치에 더해져요.</p>
+        <ol class="pick-list">${SCENES.map((sc, i) => `<li><span class="scene-h">${i + 1}. ${esc(where(sc))}</span><span class="q-s">${esc(sc.q)}</span><ul class="opts">${sc.choices.map((ch, j) => `<li class="opt ${state.picks[i] === j ? 'mine' : ''}">${state.picks[i] === j ? '✔ ' : ''}${esc(label(sc, j))} → ${esc(ch.t)} <span class="pts">· ${Object.entries(ch.s).map(([k, v]) => SHORT[k] + ' ' + v).join(', ')}</span></li>`).join('')}</ul></li>`).join('')}</ol>
+      </details>
+      <details class="more"><summary>학과 ${MAJORS.length}개 기준 보기</summary>
+        <p class="hint-s">내 능력치 비율이 각 학과 기준(3·2·1)과 가장 닮은 순서로 추천해요.</p>
+        <div class="table-wrap"><table class="scores"><tr><th>학과</th><th>3</th><th>2</th><th>1</th></tr>${MAJORS.map(m => { const w = Object.entries(m.w).sort((a, b) => b[1] - a[1]).map(([k]) => SHORT[k]); return `<tr class="${m === best ? 'mine-row' : ''}"><td>${m.name}</td><td>${w[0]}</td><td>${w[1]}</td><td>${w[2]}</td></tr>`; }).join('')}</table></div>
+      </details>`;
+
+  app.innerHTML = `
+    <div class="head"><span>2027학년도 진로적성 성적통지표</span><span class="d">D-DAY</span></div>
+    <div class="body">
+      <div class="table-wrap">
+        <table class="meta">
+          <tr><td class="photo" rowspan="4"><canvas id="photo" width="64" height="84"></canvas></td><th>수험번호</th><th>성명</th></tr>
+          <tr><td>${examNumber()}</td><td class="name">${esc(name)}</td></tr>
+          <tr><th>출신고교</th><th>구분</th></tr>
+          <tr><td class="name">D-365고등학교</td><td class="name">${state.gender === 'f' ? '여학생' : '남학생'}</td></tr>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <table class="scores">
+          <tr><th>영역</th><th>원점수</th><th>분포</th><th>등급</th></tr>
+          ${rows}
+        </table>
+      </div>
+
+      <div class="major">
+        <span class="section-label">추천 전공</span>
+        <h2>${best.name}</h2>
+        <p>${best.why}</p>
+        <p class="also">이런 전공도 어울려요 <b>${also.join(' · ')}</b></p>
+      </div>
+
+      <div class="stack">
+        <span class="section-label">10년 뒤, AI 시대의 ${best.name}</span>
+        <div class="ai">
+          <div><h3>AI가 도와줄 일</h3><ul>${best.ai.map(x => `<li>${x}</li>`).join('')}</ul></div>
+          <div class="human"><h3>사람만 할 수 있는 일</h3><ul>${best.human.map(x => `<li>${x}</li>`).join('')}</ul></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <span class="section-label">행동특성 및 종합의견</span>
+        <p class="remark">${remark}</p>
+      </div>
+      ${whyHtml}
+
+      <div class="row">
+        <button class="btn" id="again">다시 하기</button>
+        <button class="btn ghost" id="copy">결과 복사</button>
+      </div>
+      <p class="toast" id="toast"></p>
+    </div>`;
+
+  const pc = document.getElementById('photo').getContext('2d');
+  pc.imageSmoothingEnabled = false;
+  pc.fillStyle = '#DCE7F0'; pc.fillRect(0, 0, 64, 84);
+  drawStudent(pc, 4, 2, state.gender || 'm', 'down', 0, 4);
+
+  document.getElementById('again').addEventListener('click', () => {
+    state.screen = 'start'; state.i = 0; state.picks = [];
+    render(); window.scrollTo(0, 0);
+  });
+
+  const summary = `[수능까지 D-365 RPG 결과]
+성명: ${name}
+추천 전공: ${best.name}
+어울리는 전공: ${also.join(', ')}
+강점: ${byScore.slice(0, 3).map(s => `${s.name} ${grade(t[s.k], max)}등급`).join(', ')}
+종합의견: ${remark}`;
+
+  document.getElementById('copy').addEventListener('click', () => {
+    const toast = document.getElementById('toast');
+    const done = () => { toast.textContent = '결과를 복사했어요.'; };
+    const fail = () => {
+      const r = document.createRange();
+      r.selectNodeContents(app.querySelector('.remark'));
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      toast.textContent = '복사가 막혀 있어요. 선택된 종합의견을 직접 복사해 주세요.';
+    };
+    try { navigator.clipboard.writeText(summary).then(done, fail); } catch (e) { fail(); }
+  });
+}
+
+/* ---------- Boot ---------- */
+function boot(saved) {
+  if (saved && saved.state && saved.state.screen) {
+    state = saved.state;
+    if (state.screen === 'scene' && (state.i >= SCENES.length || state.picks.length > state.i)) { state.picks.length = Math.min(state.picks.length, state.i); }
+    if (state.i >= SCENES.length) state.screen = 'result';
+  }
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({ state }));
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
